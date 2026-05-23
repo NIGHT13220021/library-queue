@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Library Queue</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --accent: #00ff88;
+    --accent-dim: rgba(0,255,136,0.12);
+    --accent-glow: rgba(0,255,136,0.3);
+    --text: #e8e8f0;
+    --text-muted: #5a5a7a;
+    --error: #ff4466;
+    --error-dim: rgba(255,68,102,0.12);
+    --warn: #ffaa00;
+    --warn-dim: rgba(255,170,0,0.12);
+    --number-size: clamp(88px, 28vw, 160px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 60% 20%, rgba(0,255,136,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .header-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+  }
+
+  /* ── LOADING STATE ── */
+  #state-loading { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+  .spinner-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+
+  .spinner {
+    width: 64px; height: 64px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .spinner-dot {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 0.9s ease-in-out infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 0.4; transform: translate(-50%,-50%) scale(0.6); } }
+
+  .loading-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .loading-steps {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: color 0.3s;
+  }
+
+  .step.active { color: var(--accent); }
+  .step.done { color: var(--text-muted); }
+
+  .step-icon {
+    width: 18px; height: 18px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+
+  .step.active .step-icon { background: var(--accent-dim); border-color: var(--accent); }
+  .step.done .step-icon::after { content: '✓'; }
+  .step.active .step-icon::after { content: '●'; }
+  .step:not(.active):not(.done) .step-icon::after { content: '○'; }
+
+  /* ── ERROR STATE ── */
+  #state-error { display: none; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+
+  .error-icon {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+
+  .error-icon.type-error { background: var(--error-dim); border: 1px solid var(--error); }
+  .error-icon.type-warn { background: var(--warn-dim); border: 1px solid var(--warn); }
+  .error-icon.type-info { background: var(--accent-dim); border: 1px solid var(--accent); }
+
+  .error-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .error-title.type-error { color: var(--error); }
+  .error-title.type-warn { color: var(--warn); }
+  .error-title.type-info { color: var(--accent); }
+
+  .error-body {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* ── SUCCESS STATE ── */
+  #state-success { display: none; flex-direction: column; align-items: center; gap: 0; text-align: center; }
+
+  .success-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .number-display {
+    position: relative;
+    margin: 8px 0 24px;
+  }
+
+  .number-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%,100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+  }
+
+  .number-value {
+    font-family: 'Space Mono', monospace;
+    font-size: var(--number-size);
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(0,255,136,0.2);
+    animation: numberIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  @keyframes numberIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0 20px;
+  }
+
+  .info-grid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .info-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .info-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  .screenshot-hint {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,255,136,0.2);
+    border-radius: 12px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    line-height: 1.6;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    opacity: 0.5;
+  }
+
+  /* Utility */
+  .hidden { display: none !important; }
+  .flex-col { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="header-label">📚 Library Access</div>
+    <h1>Queue System</h1>
+  </div>
+
+  <div class="card">
+
+    <!-- LOADING -->
+    <div id="state-loading" class="flex-col" style="align-items:center; gap:20px;">
+      <div class="spinner-wrap">
+        <div class="spinner"></div>
+        <div class="spinner-dot"></div>
+      </div>
+      <div class="loading-text" id="loading-msg">Initializing...</div>
+      <div class="loading-steps">
+        <div class="step" id="step-time">
+          <div class="step-icon"></div>
+          <span>Checking time window</span>
+        </div>
+        <div class="step" id="step-location">
+          <div class="step-icon"></div>
+          <span>Verifying your location</span>
+        </div>
+        <div class="step" id="step-device">
+          <div class="step-icon"></div>
+          <span>Checking device</span>
+        </div>
+        <div class="step" id="step-queue">
+          <div class="step-icon"></div>
+          <span>Getting your number</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERROR -->
+    <div id="state-error">
+      <div class="error-icon" id="error-icon">⚠️</div>
+      <div class="error-title" id="error-title">Error</div>
+      <div class="error-body" id="error-body">Something went wrong.</div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="state-success">
+      <div class="success-label">Your Queue Number</div>
+      <div class="number-display">
+        <div class="number-glow"></div>
+        <div class="number-value" id="queue-number">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">📅 Date</span>
+          <span class="info-value" id="info-date">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">⏰ Scanned</span>
+          <span class="info-value" id="info-time">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">📍 Location</span>
+          <span class="info-value">Library</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">📊 Position</span>
+          <span class="info-value" id="info-position">—</span>
+        </div>
+      </div>
+      <div class="screenshot-hint">
+        📸 Screenshot this screen<br>Show it at the library entry
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Powered by QR Queue • v1.0</div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIGURATION — Replace these values
+// ═══════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCI0oW7bafdWUMved4ZVkB1cbSK7c0Okoc",
+  authDomain: "library-queue.firebaseapp.com",
+  databaseURL: "https://library-queue-default-rtdb.firebaseio.com",
+  projectId: "library-queue",
+  storageBucket: "library-queue.firebasestorage.app",
+  messagingSenderId: "613282709490",
+  appId: "1:613282709490:web:e820c6b5a600062184b56b"
+};
+
+const LIBRARY_CONFIG = {
+  lat: 30.720132044207038,
+  lng: 76.76735895194516,
+  radius: 100,            // meters
+  name: "Central Library",
+  openHour: 4,            // 4:00 AM
+  closeHour: 8,           // 8:00 AM
+  maxQueue: 25,
+};
+// ═══════════════════════════════════════════════════
+
+// Init Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── UI HELPERS ──────────────────────────────────────
+function showError(icon, type, title, body) {
+  document.getElementById('state-loading').style.display = 'none';
+  document.getElementById('state-success').style.display = 'none';
+  const el = document.getElementById('state-error');
+  el.style.display = 'flex';
+  document.getElementById('error-icon').textContent = icon;
+  document.getElementById('error-icon').className = `error-icon type-${type}`;
+  document.getElementById('error-title').textContent = title;
+  document.getElementById('error-title').className = `error-title type-${type}`;
+  document.getElementById('error-body').textContent = body;
+}
+
+function showSuccess(number, total) {
+  document.getElementById('state-loading').style.display = 'none';
+  document.getElementById('state-error').style.display = 'none';
+  const el = document.getElementById('state-success');
+  el.style.display = 'flex';
+
+  document.getElementById('queue-number').textContent = number;
+
+  const now = new Date();
+  document.getElementById('info-date').textContent =
+    now.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+  document.getElementById('info-time').textContent =
+    now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('info-position').textContent = `${number} of ${LIBRARY_CONFIG.maxQueue}`;
+}
+
+function setStep(id, state) {
+  // state: 'active' | 'done' | ''
+  const el = document.getElementById(id);
+  el.className = `step ${state}`;
+}
+
+function setLoadingMsg(msg) {
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+// ── DEVICE FINGERPRINT ──────────────────────────────
+function getDeviceFingerprint() {
+  const raw = [
+    navigator.userAgent,
+    screen.width + 'x' + screen.height,
+    screen.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    navigator.language,
+    navigator.hardwareConcurrency || '',
+    screen.pixelDepth || '',
+  ].join('|');
+
+  // Simple hash
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    const char = raw.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return 'dev_' + Math.abs(hash).toString(36);
+}
+
+// ── DATE KEY ────────────────────────────────────────
+function getTodayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
+// ── DISTANCE CALCULATION ────────────────────────────
+function getDistanceMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+            Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── MAIN FLOW ────────────────────────────────────────
+async function main() {
+  // STEP 1 — TIME CHECK
+  setStep('step-time', 'active');
+  setLoadingMsg('Checking time window...');
+
+  await delay(400);
+
+  const now = new Date();
+  const hour = now.getHours();
+
+  if (hour < LIBRARY_CONFIG.openHour || hour >= LIBRARY_CONFIG.closeHour) {
+    setStep('step-time', '');
+    const opensAt = `${String(LIBRARY_CONFIG.openHour).padStart(2,'0')}:00 AM`;
+    const closesAt = LIBRARY_CONFIG.closeHour <= 12
+      ? `${LIBRARY_CONFIG.closeHour}:00 ${LIBRARY_CONFIG.closeHour < 12 ? 'AM' : 'PM'}`
+      : `${LIBRARY_CONFIG.closeHour - 12}:00 PM`;
+    showError('🕐', 'warn',
+      'Queue is Closed',
+      `Queue is only open between ${opensAt} and ${closesAt}.\n\nCome back during the time window.`
+    );
+    return;
+  }
+
+  setStep('step-time', 'done');
+
+  // STEP 2 — LOCATION CHECK
+  setStep('step-location', 'active');
+  setLoadingMsg('Checking your location...');
+
+  let position;
+  try {
+    position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 0,
+      });
+    });
+  } catch (err) {
+    setStep('step-location', '');
+    if (err.code === 1) {
+      showError('📍', 'error',
+        'Location Permission Denied',
+        'Location permission is required to get a queue number.\n\nEnable location in your browser settings and refresh the page.'
+      );
+    } else if (err.code === 3) {
+      showError('📡', 'error',
+        'Location Timeout',
+        'Could not get your location in time.\n\nPlease refresh and try again outdoors.'
+      );
+    } else {
+      showError('📍', 'error',
+        'Location Unavailable',
+        'Could not determine your location.\n\nPlease refresh and try again.'
+      );
+    }
+    return;
+  }
+
+  const distance = getDistanceMeters(
+    position.coords.latitude,
+    position.coords.longitude,
+    LIBRARY_CONFIG.lat,
+    LIBRARY_CONFIG.lng
+  );
+
+  if (distance > LIBRARY_CONFIG.radius) {
+    setStep('step-location', '');
+    showError('🚫', 'error',
+      'Not at the Library',
+      `You must be physically present at ${LIBRARY_CONFIG.name} to get a queue number.\n\nYou are ${Math.round(distance)}m away. Required: within ${LIBRARY_CONFIG.radius}m.`
+    );
+    return;
+  }
+
+  setStep('step-location', 'done');
+
+  // STEP 3 — DEVICE CHECK
+  setStep('step-device', 'active');
+  setLoadingMsg('Checking device...');
+
+  await delay(300);
+
+  const deviceId = getDeviceFingerprint();
+  const todayKey = getTodayKey();
+  const lsKey = `queue_${todayKey}`;
+
+  // Check localStorage first (fast)
+  const cached = localStorage.getItem(lsKey);
+  if (cached) {
+    const { number } = JSON.parse(cached);
+    setStep('step-device', 'done');
+    setStep('step-queue', 'done');
+    showSuccess(number, LIBRARY_CONFIG.maxQueue);
+    showAlreadyHaveNumber(number);
+    return;
+  }
+
+  setStep('step-device', 'done');
+
+  // STEP 4 — FIREBASE / QUEUE NUMBER
+  setStep('step-queue', 'active');
+  setLoadingMsg('Getting your number...');
+
+  try {
+    const queueRef = db.ref('queue');
+    let assignedNumber = null;
+
+    await queueRef.transaction((current) => {
+      if (current === null) {
+        // Initialize today's queue
+        return {
+          date: todayKey,
+          counter: 1,
+          devices: { [deviceId]: 1 },
+        };
+      }
+
+      // Reset if it's a new day
+      if (current.date !== todayKey) {
+        return {
+          date: todayKey,
+          counter: 1,
+          devices: { [deviceId]: 1 },
+        };
+      }
+
+      // Device already has a number
+      if (current.devices && current.devices[deviceId]) {
+        assignedNumber = current.devices[deviceId];
+        return current; // no change
+      }
+
+      // Queue full
+      if (current.counter > LIBRARY_CONFIG.maxQueue) {
+        return; // abort transaction
+      }
+
+      // Assign next number
+      const next = (current.counter || 0) + 1;
+      return {
+        ...current,
+        counter: next,
+        devices: {
+          ...(current.devices || {}),
+          [deviceId]: next - 1,
+        },
+      };
+    }, (error, committed, snapshot) => {
+      if (error) throw error;
+
+      if (!committed) {
+        // Queue full
+        showError('🈵', 'warn',
+          'Queue is Full',
+          `All ${LIBRARY_CONFIG.maxQueue} spots for today have been taken.\n\nPlease come earlier tomorrow.`
+        );
+        return;
+      }
+
+      const data = snapshot.val();
+
+      if (assignedNumber !== null) {
+        // Already had number
+        setStep('step-queue', 'done');
+        showSuccess(assignedNumber, LIBRARY_CONFIG.maxQueue);
+        showAlreadyHaveNumber(assignedNumber);
+        localStorage.setItem(lsKey, JSON.stringify({ number: assignedNumber }));
+        return;
+      }
+
+      const myNumber = data.devices[deviceId];
+      setStep('step-queue', 'done');
+      localStorage.setItem(lsKey, JSON.stringify({ number: myNumber }));
+      showSuccess(myNumber, LIBRARY_CONFIG.maxQueue);
+    });
+
+  } catch (err) {
+    console.error(err);
+    showError('⚙️', 'error',
+      'System Error',
+      'Could not connect to the queue system.\n\nPlease tell the librarian.\n\nError: ' + (err.message || 'Unknown')
+    );
+  }
+}
+
+function showAlreadyHaveNumber(number) {
+  // Add a subtle banner above the number
+  const label = document.querySelector('.success-label');
+  if (label) {
+    label.textContent = `You already have number`;
+    label.style.color = 'var(--warn)';
+  }
+}
+
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ── START ────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Small delay so user sees the loading screen
+  setTimeout(main, 600);
+});
+</script>
+
+<!--
+═══════════════════════════════════════════════════════════════
+  FIREBASE REALTIME DATABASE RULES
+  Paste this in: Firebase Console → Realtime Database → Rules
+═══════════════════════════════════════════════════════════════
+
+{
+  "rules": {
+    "queue": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["date"]
+    }
+  }
+}
+
+NOTE: These are basic rules for a controlled QR-only environment.
+If you want stricter rules (recommended for production):
+
+{
+  "rules": {
+    "queue": {
+      ".read": true,
+      ".write": true,
+      "counter": {
+        ".validate": "newData.isNumber() && newData.val() <= 26"
+      },
+      "date": {
+        ".validate": "newData.isString()"
+      },
+      "devices": {
+        "$deviceId": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 25"
+        }
+      }
+    }
+  }
+}
+
+═══════════════════════════════════════════════════════════════
+  FIREBASE DATABASE STRUCTURE
+  This is what your database will look like after use:
+═══════════════════════════════════════════════════════════════
+
+queue/
+  date: "2024-10-15"          ← today's date (auto resets daily)
+  counter: 8                  ← next number to give (current = counter-1)
+  devices/
+    dev_a1b2c3: 1             ← deviceFingerprint: queueNumber
+    dev_x9y8z7: 2
+    dev_m3n4p5: 3
+    dev_q1r2s3: 4
+    ...
+
+═══════════════════════════════════════════════════════════════
+  VERCEL DEPLOYMENT STEPS
+═══════════════════════════════════════════════════════════════
+
+1. Replace firebaseConfig values with your real Firebase project values
+2. Replace LIBRARY_CONFIG lat/lng with your library's coordinates
+3. Push this single file to a GitHub repo
+4. Go to vercel.com → New Project → Import your repo
+5. No build settings needed — Vercel serves it as static HTML
+6. Deploy → done
+
+To get your library coordinates:
+  → Open Google Maps
+  → Right-click on library building
+  → Click the coordinates shown at top
+  → Copy lat, lng
+
+To get Firebase config:
+  → Firebase Console → Project Settings → Your Apps
+  → Add Web App if none exists
+  → Copy the firebaseConfig object
+
+═══════════════════════════════════════════════════════════════
+-->
+</body>
+</html>
