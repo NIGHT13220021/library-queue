@@ -433,7 +433,7 @@ const firebaseConfig = {
 const LIBRARY_CONFIG = {
   lat: 30.720132044207038,
   lng: 76.76735895194516,
-  radius: 100,            // meters
+  radius: 200,            // meters
   name: "Central Library",
   openHour: 4,            // 4:00 AM
   closeHour: 8,           // 8:00 AM
@@ -486,24 +486,40 @@ function setLoadingMsg(msg) {
 
 // ── DEVICE FINGERPRINT ──────────────────────────────
 function getDeviceFingerprint() {
-  const raw = [
-    navigator.userAgent,
-    screen.width + 'x' + screen.height,
-    screen.colorDepth,
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-    navigator.language,
-    navigator.hardwareConcurrency || '',
-    screen.pixelDepth || '',
-  ].join('|');
+  // Check if we already generated a persistent ID for this device
+  const persistKey = 'device_uid';
+  let uid = localStorage.getItem(persistKey);
 
-  // Simple hash
-  let hash = 0;
-  for (let i = 0; i < raw.length; i++) {
-    const char = raw.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
+  if (!uid) {
+    // Generate from hardware signals — browser independent
+    const raw = [
+      screen.width,
+      screen.height,
+      screen.colorDepth,
+      screen.pixelDepth,
+      navigator.hardwareConcurrency || 0,
+      navigator.maxTouchPoints || 0,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      navigator.language,
+      new Date().getTimezoneOffset(),
+    ].join('|');
+
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      const char = raw.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+
+    // Add random salt — makes it unique even if hardware is same
+    const salt = Math.random().toString(36).slice(2, 8);
+    uid = 'dev_' + Math.abs(hash).toString(36) + '_' + salt;
+
+    // Store permanently in localStorage
+    localStorage.setItem(persistKey, uid);
   }
-  return 'dev_' + Math.abs(hash).toString(36);
+
+  return uid;
 }
 
 // ── DATE KEY ────────────────────────────────────────
@@ -549,32 +565,45 @@ async function main() {
 
   let position;
   try {
+    // First try — fast, low accuracy (works indoors too)
     position = await new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 0,
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 300000,
       });
     });
-  } catch (err) {
-    setStep('step-location', '');
-    if (err.code === 1) {
-      showError('📍', 'error',
-        'Location Permission Denied',
-        'Location permission is required to get a queue number.\n\nEnable location in your browser settings and refresh the page.'
-      );
-    } else if (err.code === 3) {
-      showError('📡', 'error',
-        'Location Timeout',
-        'Could not get your location in time.\n\nPlease refresh and try again outdoors.'
-      );
-    } else {
-      showError('📍', 'error',
-        'Location Unavailable',
-        'Could not determine your location.\n\nPlease refresh and try again.'
-      );
+  } catch (firstErr) {
+    try {
+      // Second try — high accuracy, more time
+      setLoadingMsg('Retrying location...');
+      position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 30000,
+          maximumAge: 0,
+        });
+      });
+    } catch (err) {
+      setStep('step-location', '');
+      if (err.code === 1) {
+        showError('📍', 'error',
+          'Location Permission Denied',
+          'Location permission is required.\n\nEnable location in your browser settings and refresh.'
+        );
+      } else if (err.code === 3) {
+        showError('📡', 'error',
+          'Location Timeout',
+          'Could not get your location.\n\nMake sure:\n• Location is ON in phone settings\n• Refresh and try again'
+        );
+      } else {
+        showError('📍', 'error',
+          'Location Unavailable',
+          'Could not determine your location.\n\nPlease refresh and try again.'
+        );
+      }
+      return;
     }
-    return;
   }
 
   const distance = getDistanceMeters(
