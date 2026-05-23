@@ -4,422 +4,749 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Library Queue</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --border: #1e1e2e;
-    --accent: #00ff88;
-    --accent-dim: rgba(0,255,136,0.12);
-    --accent-glow: rgba(0,255,136,0.3);
-    --text: #e8e8f0;
-    --text-muted: #5a5a7a;
-    --error: #ff4466;
-    --error-dim: rgba(255,68,102,0.12);
-    --warn: #ffaa00;
-    --warn-dim: rgba(255,170,0,0.12);
-    --number-size: clamp(88px, 28vw, 160px);
+    --bg: #f5f0eb;
+    --surface: #ffffff;
+    --surface2: #faf7f4;
+    --border: #e8e0d5;
+    --border2: #d4c9bb;
+    --accent: #c17b3f;
+    --accent-light: #f5e8d8;
+    --accent-glow: rgba(193,123,63,0.15);
+    --text: #2c2416;
+    --text-mid: #7a6a58;
+    --text-muted: #b0a090;
+    --green: #4a7c59;
+    --green-light: #e8f4ec;
+    --red: #c0392b;
+    --red-light: #fce8e6;
+    --warn: #b8860b;
+    --warn-light: #fef9e7;
+    --admin: #5b6fa8;
+    --admin-light: #eef0f8;
+    --shadow: 0 2px 24px rgba(44,36,22,0.08), 0 1px 4px rgba(44,36,22,0.06);
+    --shadow-lg: 0 8px 40px rgba(44,36,22,0.12), 0 2px 8px rgba(44,36,22,0.08);
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 20px;
-    overflow-x: hidden;
+    padding: 32px 20px;
     position: relative;
+    overflow-x: hidden;
   }
 
-  /* Background grid */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background-image:
-      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(193,123,63,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 100%, rgba(193,123,63,0.06) 0%, transparent 55%);
     pointer-events: none;
-    z-index: 0;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(ellipse at 60% 20%, rgba(0,255,136,0.04) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
   }
 
   .container {
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
     position: relative;
     z-index: 1;
+    animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
   }
 
   /* Header */
   .header {
     text-align: center;
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
-  .header-label {
-    font-family: 'Space Mono', monospace;
+  .header-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
     font-size: 10px;
-    letter-spacing: 4px;
-    color: var(--accent);
+    letter-spacing: 3px;
     text-transform: uppercase;
-    margin-bottom: 8px;
-    opacity: 0.8;
+    color: var(--accent);
+    background: var(--accent-light);
+    border: 1px solid rgba(193,123,63,0.2);
+    border-radius: 40px;
+    padding: 5px 14px;
+    margin-bottom: 14px;
   }
 
   .header h1 {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    font-weight: 400;
     color: var(--text);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
   }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .admin-pill {
+    display: none;
+    margin-top: 10px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--admin);
+    background: var(--admin-light);
+    border: 1px solid rgba(91,111,168,0.25);
+    border-radius: 40px;
+    padding: 5px 14px;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  body.admin-mode .admin-pill { display: flex; }
 
   /* Card */
   .card {
     background: var(--surface);
+    border-radius: 24px;
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px 28px;
+    box-shadow: var(--shadow);
+    padding: 36px 32px;
     position: relative;
     overflow: hidden;
+    transition: box-shadow 0.4s;
   }
 
-  .card::before {
-    content: '';
+  body.admin-mode .card {
+    border-color: rgba(91,111,168,0.3);
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(91,111,168,0.1);
+  }
+
+  .card-stripe {
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), #e8a86a, var(--accent));
+    opacity: 0.7;
+    transition: background 0.4s;
   }
 
-  /* ── LOADING STATE ── */
-  #state-loading { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-
-  .spinner-wrap {
-    position: relative;
-    width: 64px;
-    height: 64px;
+  body.admin-mode .card-stripe {
+    background: linear-gradient(90deg, var(--admin), #8fa0d4, var(--admin));
   }
 
-  .spinner {
-    width: 64px; height: 64px;
+  /* LOADING */
+  #state-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 8px 0;
+  }
+
+  .loader-ring {
+    width: 52px; height: 52px;
+    border-radius: 50%;
     border: 2px solid var(--border);
     border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
-
-  .spinner-dot {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 8px; height: 8px;
-    background: var(--accent);
-    border-radius: 50%;
-    animation: pulse 0.9s ease-in-out infinite;
+    animation: spin 1s linear infinite;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes pulse { 0%,100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 50% { opacity: 0.4; transform: translate(-50%,-50%) scale(0.6); } }
 
-  .loading-text {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
+  .loading-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
     color: var(--text-muted);
     letter-spacing: 1px;
     text-align: center;
   }
 
-  .loading-steps {
+  .steps {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 10px;
   }
 
   .step {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-muted);
     transition: color 0.3s;
   }
 
-  .step.active { color: var(--accent); }
-  .step.done { color: var(--text-muted); }
+  .step.active { color: var(--accent); font-weight: 500; }
+  .step.done   { color: var(--text-mid); }
 
-  .step-icon {
-    width: 18px; height: 18px;
-    border: 1px solid currentColor;
+  .step-dot {
+    width: 7px; height: 7px;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 9px;
+    background: var(--border2);
     flex-shrink: 0;
+    transition: background 0.3s, box-shadow 0.3s;
   }
 
-  .step.active .step-icon { background: var(--accent-dim); border-color: var(--accent); }
-  .step.done .step-icon::after { content: '✓'; }
-  .step.active .step-icon::after { content: '●'; }
-  .step:not(.active):not(.done) .step-icon::after { content: '○'; }
+  .step.active .step-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    animation: dotPulse 1.2s ease-in-out infinite;
+  }
 
-  /* ── ERROR STATE ── */
-  #state-error { display: none; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+  .step.done .step-dot { background: var(--green); }
 
-  .error-icon {
-    width: 64px; height: 64px;
-    border-radius: 50%;
+  @keyframes dotPulse {
+    0%,100% { box-shadow: 0 0 0 3px var(--accent-glow); }
+    50%      { box-shadow: 0 0 0 6px rgba(193,123,63,0.08); }
+  }
+
+  /* ERROR */
+  #state-error {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    padding: 8px 0;
+  }
+
+  .err-badge {
+    width: 56px; height: 56px;
+    border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
+    font-size: 26px;
   }
 
-  .error-icon.type-error { background: var(--error-dim); border: 1px solid var(--error); }
-  .error-icon.type-warn { background: var(--warn-dim); border: 1px solid var(--warn); }
-  .error-icon.type-info { background: var(--accent-dim); border: 1px solid var(--accent); }
+  .err-badge.type-error { background: var(--red-light); }
+  .err-badge.type-warn  { background: var(--warn-light); }
+  .err-badge.type-info  { background: var(--accent-light); }
 
-  .error-title {
-    font-size: 18px;
-    font-weight: 700;
+  .err-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
     line-height: 1.3;
   }
 
-  .error-title.type-error { color: var(--error); }
-  .error-title.type-warn { color: var(--warn); }
-  .error-title.type-info { color: var(--accent); }
+  .err-title.type-error { color: var(--red); }
+  .err-title.type-warn  { color: var(--warn); }
+  .err-title.type-info  { color: var(--accent); }
 
-  .error-body {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.7;
+  .err-body {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.8;
+    white-space: pre-line;
+    font-family: 'DM Sans', sans-serif;
   }
 
-  /* ── SUCCESS STATE ── */
-  #state-success { display: none; flex-direction: column; align-items: center; gap: 0; text-align: center; }
+  /* SUCCESS */
+  #state-success {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 
-  .success-label {
-    font-family: 'Space Mono', monospace;
+  .success-eyebrow {
+    font-family: 'DM Mono', monospace;
     font-size: 10px;
     letter-spacing: 3px;
-    color: var(--text-muted);
     text-transform: uppercase;
-    margin-bottom: 12px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    transition: color 0.4s;
   }
 
-  .number-display {
+  .num-wrap {
     position: relative;
-    margin: 8px 0 24px;
+    margin-bottom: 32px;
   }
 
-  .number-glow {
+  .num-halo {
     position: absolute;
     top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 180px; height: 180px;
-    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    transform: translate(-50%,-50%);
+    width: 160px; height: 160px;
     border-radius: 50%;
-    animation: breathe 3s ease-in-out infinite;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    animation: halo 3s ease-in-out infinite;
+    transition: background 0.4s;
   }
 
-  @keyframes breathe {
-    0%,100% { opacity: 0.6; transform: translate(-50%,-50%) scale(1); }
-    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); }
+  body.admin-mode .num-halo {
+    background: radial-gradient(circle, rgba(91,111,168,0.12) 0%, transparent 70%);
   }
 
-  .number-value {
-    font-family: 'Space Mono', monospace;
-    font-size: var(--number-size);
-    font-weight: 700;
+  @keyframes halo {
+    0%,100% { transform:translate(-50%,-50%) scale(1); opacity:0.7; }
+    50%      { transform:translate(-50%,-50%) scale(1.2); opacity:1; }
+  }
+
+  .num-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(80px, 26vw, 140px);
     color: var(--accent);
     line-height: 1;
     position: relative;
     z-index: 1;
-    text-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(0,255,136,0.2);
-    animation: numberIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: numPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+    transition: color 0.4s;
   }
 
-  @keyframes numberIn {
-    from { opacity: 0; transform: scale(0.5); }
-    to { opacity: 1; transform: scale(1); }
+  body.admin-mode .num-val { color: var(--admin); }
+
+  @keyframes numPop {
+    from { opacity:0; transform:scale(0.4) rotate(-4deg); }
+    to   { opacity:1; transform:scale(1) rotate(0deg); }
   }
 
+  .info-list {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .info-item:last-child { border-bottom: none; }
+
+  .info-k {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .info-v {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .hint-box {
+    width: 100%;
+    background: var(--accent-light);
+    border: 1px solid rgba(193,123,63,0.2);
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--accent);
+    line-height: 1.6;
+    text-align: center;
+    transition: background 0.4s, border-color 0.4s, color 0.4s;
+  }
+
+  body.admin-mode .hint-box {
+    background: var(--admin-light);
+    border-color: rgba(91,111,168,0.2);
+    color: var(--admin);
+  }
+
+  /* ADMIN PANEL */
+  #state-admin {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    text-align: center;
+  }
+
+  .admin-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--admin);
+    margin-bottom: 20px;
+  }
+
+  .admin-count {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(64px, 22vw, 110px);
+    color: var(--admin);
+    line-height: 1;
+    margin-bottom: 6px;
+    animation: numPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  .admin-count-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .admin-stat-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: left;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .admin-btns {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .abtn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: transform 0.15s, opacity 0.2s;
+    letter-spacing: 0.1px;
+  }
+
+  .abtn:active { transform: scale(0.97); }
+
+  .abtn.primary { background: var(--admin); color: #fff; }
+  .abtn.secondary { background: var(--admin-light); color: var(--admin); border: 1px solid rgba(91,111,168,0.2); }
+  .abtn.danger   { background: var(--red-light); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+
+  /* ADMIN MODAL */
+  #admin-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(245,240,235,0.75);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  #admin-modal.open { display: flex; }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: var(--shadow-lg);
+    padding: 32px 28px 28px;
+    width: 100%;
+    max-width: 340px;
+    position: relative;
+    animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s;
+  }
+
+  .modal-close:hover { border-color: var(--border2); color: var(--text); }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .modal-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .pin-dots {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+
+  .pdot {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .pdot.filled {
+    background: var(--admin);
+    border-color: var(--admin);
+    box-shadow: 0 0 0 3px rgba(91,111,168,0.15);
+  }
+
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .npb {
+    padding: 15px 0;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    user-select: none;
+  }
+
+  .npb:hover { background: var(--bg); }
+  .npb:active { transform: scale(0.93); box-shadow: none; }
+
+  .npb.del { font-size: 16px; color: var(--text-muted); }
+
+  .npb.ok {
+    background: var(--admin);
+    color: #fff;
+    border-color: var(--admin);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .npb.ok:hover { background: #4a5e97; }
+
+  .pin-err {
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--red);
+    text-align: center;
+    min-height: 16px;
+  }
+
+  /* Divider */
   .divider {
     width: 100%;
     height: 1px;
     background: var(--border);
-    margin: 8px 0 20px;
-  }
-
-  .info-grid {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .info-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .info-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .info-value {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: var(--text);
-    text-align: right;
-  }
-
-  .screenshot-hint {
-    margin-top: 24px;
-    padding: 14px 18px;
-    background: var(--accent-dim);
-    border: 1px solid rgba(0,255,136,0.2);
-    border-radius: 12px;
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    line-height: 1.6;
-    text-align: center;
-    letter-spacing: 0.3px;
+    margin: 20px 0;
   }
 
   /* Footer */
   .footer {
     text-align: center;
     margin-top: 20px;
-    font-family: 'Space Mono', monospace;
+    font-family: 'DM Mono', monospace;
     font-size: 10px;
     color: var(--text-muted);
     letter-spacing: 1px;
-    opacity: 0.5;
+    opacity: 0.6;
   }
 
-  /* Utility */
-  .hidden { display: none !important; }
-  .flex-col { display: flex; flex-direction: column; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
   <div class="header">
-    <div class="header-label">📚 Library Access</div>
-    <h1>Queue System</h1>
+    <div class="header-eyebrow">📚 Library</div>
+    <h1 id="header-title">Queue <em>System</em></h1>
+    <div class="admin-pill">🔐 Admin</div>
   </div>
 
   <div class="card">
+    <div class="card-stripe"></div>
 
     <!-- LOADING -->
-    <div id="state-loading" class="flex-col" style="align-items:center; gap:20px;">
-      <div class="spinner-wrap">
-        <div class="spinner"></div>
-        <div class="spinner-dot"></div>
-      </div>
-      <div class="loading-text" id="loading-msg">Initializing...</div>
-      <div class="loading-steps">
-        <div class="step" id="step-time">
-          <div class="step-icon"></div>
-          <span>Checking time window</span>
-        </div>
-        <div class="step" id="step-location">
-          <div class="step-icon"></div>
-          <span>Verifying your location</span>
-        </div>
-        <div class="step" id="step-device">
-          <div class="step-icon"></div>
-          <span>Checking device</span>
-        </div>
-        <div class="step" id="step-queue">
-          <div class="step-icon"></div>
-          <span>Getting your number</span>
-        </div>
+    <div id="state-loading">
+      <div class="loader-ring"></div>
+      <div class="loading-label" id="loading-msg">Initializing…</div>
+      <div class="steps">
+        <div class="step" id="step-time"><div class="step-dot"></div> Checking time window</div>
+        <div class="step" id="step-location"><div class="step-dot"></div> Verifying your location</div>
+        <div class="step" id="step-device"><div class="step-dot"></div> Checking device</div>
+        <div class="step" id="step-queue"><div class="step-dot"></div> Getting your number</div>
       </div>
     </div>
 
     <!-- ERROR -->
     <div id="state-error">
-      <div class="error-icon" id="error-icon">⚠️</div>
-      <div class="error-title" id="error-title">Error</div>
-      <div class="error-body" id="error-body">Something went wrong.</div>
+      <div class="err-badge" id="err-icon">⚠️</div>
+      <div class="err-title" id="err-title">Error</div>
+      <div class="err-body" id="err-body">Something went wrong.</div>
     </div>
 
     <!-- SUCCESS -->
     <div id="state-success">
-      <div class="success-label">Your Queue Number</div>
-      <div class="number-display">
-        <div class="number-glow"></div>
-        <div class="number-value" id="queue-number">—</div>
+      <div class="success-eyebrow" id="success-eyebrow">Your Queue Number</div>
+      <div class="num-wrap">
+        <div class="num-halo"></div>
+        <div class="num-val" id="queue-number">—</div>
       </div>
-      <div class="divider"></div>
-      <div class="info-grid">
-        <div class="info-row">
-          <span class="info-label">📅 Date</span>
-          <span class="info-value" id="info-date">—</span>
+      <div class="info-list">
+        <div class="info-item">
+          <span class="info-k">📅 Date</span>
+          <span class="info-v" id="info-date">—</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">⏰ Scanned</span>
-          <span class="info-value" id="info-time">—</span>
+        <div class="info-item">
+          <span class="info-k">⏰ Scanned at</span>
+          <span class="info-v" id="info-time">—</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">📍 Location</span>
-          <span class="info-value">Library</span>
+        <div class="info-item">
+          <span class="info-k">📍 Location</span>
+          <span class="info-v" id="info-loc">Library</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">📊 Position</span>
-          <span class="info-value" id="info-position">—</span>
+        <div class="info-item">
+          <span class="info-k">📊 Position</span>
+          <span class="info-v" id="info-pos">—</span>
+        </div>
+        <div class="info-item" id="admin-row" style="display:none;">
+          <span class="info-k">🔐 Mode</span>
+          <span class="info-v" style="color:var(--admin)">Admin Override</span>
         </div>
       </div>
-      <div class="screenshot-hint">
-        📸 Screenshot this screen<br>Show it at the library entry
-      </div>
+      <div class="hint-box" id="hint-box">📸 Screenshot this — show at library entry</div>
     </div>
 
+    <!-- ADMIN PANEL -->
+    <div id="state-admin">
+      <div class="admin-eyebrow">Admin Panel</div>
+      <div class="admin-count" id="admin-big-num">—</div>
+      <div class="admin-count-label">numbers issued today</div>
+      <div class="admin-stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Status</div>
+          <div class="stat-val" id="ai-status">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Time</div>
+          <div class="stat-val" id="ai-time">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Used / Total</div>
+          <div class="stat-val" id="ai-used">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Remaining</div>
+          <div class="stat-val" id="ai-left">—</div>
+        </div>
+      </div>
+      <div class="admin-btns">
+        <button class="abtn primary" id="btn-gen">⚡ Generate Number</button>
+        <button class="abtn secondary" id="btn-refresh">↻ Refresh Status</button>
+        <button class="abtn danger" id="btn-reset">🗑 Reset Today's Queue</button>
+        <button class="abtn secondary" id="btn-exit">← Exit Admin</button>
+      </div>
+    </div>
   </div>
 
-  <div class="footer">Powered by QR Queue • v1.0</div>
+  <div class="footer">QR Queue · v1.1</div>
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Admin Modal -->
+<div id="admin-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title">Admin</div>
+    <div class="modal-sub">Enter your 4-digit PIN</div>
+    <div class="pin-dots">
+      <div class="pdot" id="d0"></div>
+      <div class="pdot" id="d1"></div>
+      <div class="pdot" id="d2"></div>
+      <div class="pdot" id="d3"></div>
+    </div>
+    <div class="numpad">
+      <button class="npb" data-n="1">1</button>
+      <button class="npb" data-n="2">2</button>
+      <button class="npb" data-n="3">3</button>
+      <button class="npb" data-n="4">4</button>
+      <button class="npb" data-n="5">5</button>
+      <button class="npb" data-n="6">6</button>
+      <button class="npb" data-n="7">7</button>
+      <button class="npb" data-n="8">8</button>
+      <button class="npb" data-n="9">9</button>
+      <button class="npb del" id="btn-del">⌫</button>
+      <button class="npb" data-n="0">0</button>
+      <button class="npb ok" id="btn-ok">OK</button>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-// ═══════════════════════════════════════════════════
-//  CONFIGURATION — Replace these values
-// ═══════════════════════════════════════════════════
 const firebaseConfig = {
   apiKey: "AIzaSyCI0oW7bafdWUMved4ZVkB1cbSK7c0Okoc",
   authDomain: "library-queue.firebaseapp.com",
@@ -430,406 +757,295 @@ const firebaseConfig = {
   appId: "1:613282709490:web:e820c6b5a600062184b56b"
 };
 
-const LIBRARY_CONFIG = {
+const CFG = {
   lat: 30.720132044207038,
   lng: 76.76735895194516,
-  radius: 200,            // meters
+  radius: 200,
   name: "Central Library",
-  openHour: 4,            // 4:00 AM
-  closeHour: 8,           // 8:00 AM
+  openHour: 4,
+  closeHour: 8,
   maxQueue: 25,
 };
-// ═══════════════════════════════════════════════════
 
-// Init Firebase
+const ADMIN_PIN = '1322';
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ── UI HELPERS ──────────────────────────────────────
+let pinInput = '';
+let tapCount = 0, tapTimer = null;
+
+function hideAll() {
+  ['state-loading','state-error','state-success','state-admin']
+    .forEach(id => document.getElementById(id).style.display = 'none');
+}
+
 function showError(icon, type, title, body) {
-  document.getElementById('state-loading').style.display = 'none';
-  document.getElementById('state-success').style.display = 'none';
-  const el = document.getElementById('state-error');
-  el.style.display = 'flex';
-  document.getElementById('error-icon').textContent = icon;
-  document.getElementById('error-icon').className = `error-icon type-${type}`;
-  document.getElementById('error-title').textContent = title;
-  document.getElementById('error-title').className = `error-title type-${type}`;
-  document.getElementById('error-body').textContent = body;
+  hideAll();
+  document.getElementById('state-error').style.display = 'flex';
+  document.getElementById('err-icon').textContent = icon;
+  document.getElementById('err-icon').className = `err-badge type-${type}`;
+  document.getElementById('err-title').textContent = title;
+  document.getElementById('err-title').className = `err-title type-${type}`;
+  document.getElementById('err-body').textContent = body;
 }
 
-function showSuccess(number, total) {
-  document.getElementById('state-loading').style.display = 'none';
-  document.getElementById('state-error').style.display = 'none';
-  const el = document.getElementById('state-success');
-  el.style.display = 'flex';
-
-  document.getElementById('queue-number').textContent = number;
-
+function showSuccess(num, adminOverride = false) {
+  hideAll();
+  document.getElementById('state-success').style.display = 'flex';
+  document.getElementById('queue-number').textContent = num;
+  document.getElementById('admin-row').style.display = adminOverride ? 'flex' : 'none';
   const now = new Date();
-  document.getElementById('info-date').textContent =
-    now.toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
-  document.getElementById('info-time').textContent =
-    now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  document.getElementById('info-position').textContent = `${number} of ${LIBRARY_CONFIG.maxQueue}`;
-}
-
-function setStep(id, state) {
-  // state: 'active' | 'done' | ''
-  const el = document.getElementById(id);
-  el.className = `step ${state}`;
-}
-
-function setLoadingMsg(msg) {
-  document.getElementById('loading-msg').textContent = msg;
-}
-
-// ── DEVICE FINGERPRINT ──────────────────────────────
-function getDeviceFingerprint() {
-  // Check if we already generated a persistent ID for this device
-  const persistKey = 'device_uid';
-  let uid = localStorage.getItem(persistKey);
-
-  if (!uid) {
-    // Generate from hardware signals — browser independent
-    const raw = [
-      screen.width,
-      screen.height,
-      screen.colorDepth,
-      screen.pixelDepth,
-      navigator.hardwareConcurrency || 0,
-      navigator.maxTouchPoints || 0,
-      Intl.DateTimeFormat().resolvedOptions().timeZone,
-      navigator.language,
-      new Date().getTimezoneOffset(),
-    ].join('|');
-
-    let hash = 0;
-    for (let i = 0; i < raw.length; i++) {
-      const char = raw.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
-    }
-
-    // Add random salt — makes it unique even if hardware is same
-    const salt = Math.random().toString(36).slice(2, 8);
-    uid = 'dev_' + Math.abs(hash).toString(36) + '_' + salt;
-
-    // Store permanently in localStorage
-    localStorage.setItem(persistKey, uid);
+  document.getElementById('info-date').textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('info-time').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('info-loc').textContent  = adminOverride ? 'Admin Override' : CFG.name;
+  document.getElementById('info-pos').textContent  = `${num} of ${CFG.maxQueue}`;
+  if (adminOverride) {
+    document.getElementById('success-eyebrow').textContent = 'Admin Queue Number';
+    document.getElementById('success-eyebrow').style.color = 'var(--admin)';
+    document.getElementById('hint-box').textContent = '🔐 Admin-generated · Show at library entry';
+  } else {
+    document.getElementById('success-eyebrow').style.color = '';
+    document.getElementById('success-eyebrow').textContent = 'Your Queue Number';
+    document.getElementById('hint-box').textContent = '📸 Screenshot this — show at library entry';
   }
+}
 
+function setStep(id, state) { document.getElementById(id).className = `step ${state}`; }
+function setMsg(m)           { document.getElementById('loading-msg').textContent = m; }
+function delay(ms)           { return new Promise(r => setTimeout(r, ms)); }
+
+function deviceId() {
+  let uid = localStorage.getItem('device_uid');
+  if (!uid) {
+    const raw = [screen.width,screen.height,screen.colorDepth,navigator.hardwareConcurrency||0,
+      navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone,
+      navigator.language,new Date().getTimezoneOffset()].join('|');
+    let h = 0;
+    for (let i=0;i<raw.length;i++){h=((h<<5)-h)+raw.charCodeAt(i);h|=0;}
+    uid = 'dev_'+Math.abs(h).toString(36)+'_'+Math.random().toString(36).slice(2,8);
+    localStorage.setItem('device_uid', uid);
+  }
   return uid;
 }
 
-// ── DATE KEY ────────────────────────────────────────
-function getTodayKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+function todayKey() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
 }
 
-// ── DISTANCE CALCULATION ────────────────────────────
-function getDistanceMeters(lat1, lng1, lat2, lng2) {
-  const R = 6371000;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) ** 2 +
-            Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-            Math.sin(dLng/2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+function distMeters(a,b,c,d) {
+  const R=6371000,dL=(c-a)*Math.PI/180,dG=(d-b)*Math.PI/180;
+  const x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-// ── MAIN FLOW ────────────────────────────────────────
+async function assignNumber(devId, day, forceNew=false) {
+  const ref = db.ref('queue');
+  let assigned = null, full = false;
+  await ref.transaction(cur => {
+    if (!cur || cur.date !== day) return {date:day, counter:2, devices:{[devId]:1}};
+    if (!forceNew && cur.devices?.[devId]) { assigned = cur.devices[devId]; return cur; }
+    if (cur.counter > CFG.maxQueue) { full = true; return; }
+    const nxt = (cur.counter||1)+1;
+    return {...cur, counter:nxt, devices:{...(cur.devices||{}), [devId]:nxt-1}};
+  }, (err, committed, snap) => {
+    if (err) throw err;
+    if (!committed) { full = true; return; }
+    if (assigned === null) assigned = snap.val().devices[devId];
+  });
+  return {assigned, full};
+}
+
 async function main() {
-  // STEP 1 — TIME CHECK
-  setStep('step-time', 'active');
-  setLoadingMsg('Checking time window...');
-
+  setStep('step-time','active');
+  setMsg('Checking time window…');
   await delay(400);
 
   const now = new Date();
   const hour = now.getHours();
+  if (hour < CFG.openHour || hour >= CFG.closeHour) {
+    setStep('step-time','');
+    showError('🕐','warn','Queue is Closed',
+      `Queue opens at ${CFG.openHour}:00 AM and closes at ${CFG.closeHour}:00 AM.\n\nCurrent time: ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}\n\nCome back during opening hours.`
+    );
+    return;
+  }
+  setStep('step-time','done');
 
-  // TESTING MODE — time check disabled
-  // if (hour < LIBRARY_CONFIG.openHour || hour >= LIBRARY_CONFIG.closeHour) {
-  //   setStep('step-time', '');
-  //   showError('🕐', 'warn', 'Queue is Closed', '...');
-  //   return;
-  // }
+  setStep('step-location','active');
+  setMsg('Checking your location…');
 
-  setStep('step-time', 'done');
-
-  // STEP 2 — LOCATION CHECK
-  setStep('step-location', 'active');
-  setLoadingMsg('Checking your location...');
-
-  let position;
+  let pos;
   try {
-    // First try — fast, low accuracy (works indoors too)
-    position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false,
-        timeout: 15000,
-        maximumAge: 300000,
-      });
-    });
-  } catch (firstErr) {
+    pos = await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:false,timeout:15000,maximumAge:300000}));
+  } catch {
     try {
-      // Second try — high accuracy, more time
-      setLoadingMsg('Retrying location...');
-      position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 30000,
-          maximumAge: 0,
-        });
-      });
-    } catch (err) {
-      setStep('step-location', '');
-      if (err.code === 1) {
-        showError('📍', 'error',
-          'Location Permission Denied',
-          'Location permission is required.\n\nEnable location in your browser settings and refresh.'
-        );
-      } else if (err.code === 3) {
-        showError('📡', 'error',
-          'Location Timeout',
-          'Could not get your location.\n\nMake sure:\n• Location is ON in phone settings\n• Refresh and try again'
-        );
-      } else {
-        showError('📍', 'error',
-          'Location Unavailable',
-          'Could not determine your location.\n\nPlease refresh and try again.'
-        );
-      }
+      setMsg('Retrying location…');
+      pos = await new Promise((res,rej) => navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,timeout:30000,maximumAge:0}));
+    } catch (e) {
+      setStep('step-location','');
+      if (e.code===1) showError('📍','error','Location Denied','Enable location permission in browser settings and refresh.');
+      else if (e.code===3) showError('📡','error','Location Timeout','Could not get location.\n\nMake sure location is ON, then refresh.');
+      else showError('📍','error','Location Unavailable','Please refresh and try again.');
       return;
     }
   }
 
-  const distance = getDistanceMeters(
-    position.coords.latitude,
-    position.coords.longitude,
-    LIBRARY_CONFIG.lat,
-    LIBRARY_CONFIG.lng
-  );
-
-  if (distance > LIBRARY_CONFIG.radius) {
-    setStep('step-location', '');
-    showError('🚫', 'error',
-      'Not at the Library',
-      `You must be physically present at ${LIBRARY_CONFIG.name} to get a queue number.\n\nYou are ${Math.round(distance)}m away. Required: within ${LIBRARY_CONFIG.radius}m.`
+  const dist = distMeters(pos.coords.latitude, pos.coords.longitude, CFG.lat, CFG.lng);
+  if (dist > CFG.radius) {
+    setStep('step-location','');
+    showError('🚫','error','Not at the Library',
+      `You must be at ${CFG.name} to get a number.\n\nYou are ${Math.round(dist)}m away.\nRequired: within ${CFG.radius}m.`
     );
     return;
   }
+  setStep('step-location','done');
 
-  setStep('step-location', 'done');
-
-  // STEP 3 — DEVICE CHECK
-  setStep('step-device', 'active');
-  setLoadingMsg('Checking device...');
-
+  setStep('step-device','active');
+  setMsg('Checking device…');
   await delay(300);
 
-  const deviceId = getDeviceFingerprint();
-  const todayKey = getTodayKey();
-  const lsKey = `queue_${todayKey}`;
-
-  // Check localStorage first (fast)
+  const dev = deviceId();
+  const day = todayKey();
+  const lsKey = `queue_${day}`;
   const cached = localStorage.getItem(lsKey);
   if (cached) {
-    const { number } = JSON.parse(cached);
-    setStep('step-device', 'done');
-    setStep('step-queue', 'done');
-    showSuccess(number, LIBRARY_CONFIG.maxQueue);
-    showAlreadyHaveNumber(number);
+    const {number} = JSON.parse(cached);
+    setStep('step-device','done');
+    setStep('step-queue','done');
+    showSuccess(number);
+    document.getElementById('success-eyebrow').textContent = 'Already registered';
+    document.getElementById('success-eyebrow').style.color = 'var(--warn)';
     return;
   }
+  setStep('step-device','done');
 
-  setStep('step-device', 'done');
-
-  // STEP 4 — FIREBASE / QUEUE NUMBER
-  setStep('step-queue', 'active');
-  setLoadingMsg('Getting your number...');
+  setStep('step-queue','active');
+  setMsg('Getting your number…');
 
   try {
-    const queueRef = db.ref('queue');
-    let assignedNumber = null;
-
-    await queueRef.transaction((current) => {
-      if (current === null) {
-        // Initialize today's queue
-        return {
-          date: todayKey,
-          counter: 1,
-          devices: { [deviceId]: 1 },
-        };
-      }
-
-      // Reset if it's a new day
-      if (current.date !== todayKey) {
-        return {
-          date: todayKey,
-          counter: 1,
-          devices: { [deviceId]: 1 },
-        };
-      }
-
-      // Device already has a number
-      if (current.devices && current.devices[deviceId]) {
-        assignedNumber = current.devices[deviceId];
-        return current; // no change
-      }
-
-      // Queue full
-      if (current.counter > LIBRARY_CONFIG.maxQueue) {
-        return; // abort transaction
-      }
-
-      // Assign next number
-      const next = (current.counter || 0) + 1;
-      return {
-        ...current,
-        counter: next,
-        devices: {
-          ...(current.devices || {}),
-          [deviceId]: next - 1,
-        },
-      };
-    }, (error, committed, snapshot) => {
-      if (error) throw error;
-
-      if (!committed) {
-        // Queue full
-        showError('🈵', 'warn',
-          'Queue is Full',
-          `All ${LIBRARY_CONFIG.maxQueue} spots for today have been taken.\n\nPlease come earlier tomorrow.`
-        );
-        return;
-      }
-
-      const data = snapshot.val();
-
-      if (assignedNumber !== null) {
-        // Already had number
-        setStep('step-queue', 'done');
-        showSuccess(assignedNumber, LIBRARY_CONFIG.maxQueue);
-        showAlreadyHaveNumber(assignedNumber);
-        localStorage.setItem(lsKey, JSON.stringify({ number: assignedNumber }));
-        return;
-      }
-
-      const myNumber = data.devices[deviceId];
-      setStep('step-queue', 'done');
-      localStorage.setItem(lsKey, JSON.stringify({ number: myNumber }));
-      showSuccess(myNumber, LIBRARY_CONFIG.maxQueue);
-    });
-
-  } catch (err) {
-    console.error(err);
-    showError('⚙️', 'error',
-      'System Error',
-      'Could not connect to the queue system.\n\nPlease tell the librarian.\n\nError: ' + (err.message || 'Unknown')
-    );
+    const {assigned, full} = await assignNumber(dev, day);
+    if (full) { showError('🈵','warn','Queue Full',`All ${CFG.maxQueue} spots are taken.\n\nCome earlier tomorrow.`); return; }
+    setStep('step-queue','done');
+    localStorage.setItem(lsKey, JSON.stringify({number:assigned}));
+    showSuccess(assigned);
+  } catch (e) {
+    showError('⚙️','error','System Error','Could not connect.\n\nTell the librarian.\n\n'+e.message);
   }
 }
 
-function showAlreadyHaveNumber(number) {
-  // Add a subtle banner above the number
-  const label = document.querySelector('.success-label');
-  if (label) {
-    label.textContent = `You already have number`;
-    label.style.color = 'var(--warn)';
-  }
-}
-
-function delay(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
-// ── START ────────────────────────────────────────────
-window.addEventListener('load', () => {
-  // Small delay so user sees the loading screen
-  setTimeout(main, 600);
+// Admin: tap title 5×
+document.getElementById('header-title').addEventListener('click', () => {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => tapCount=0, 2000);
+  if (tapCount >= 5) { tapCount=0; openModal(); }
 });
+
+function openModal() {
+  pinInput=''; updateDots(); document.getElementById('pin-err').textContent='';
+  document.getElementById('admin-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('admin-modal').classList.remove('open'); pinInput=''; updateDots(); }
+
+function updateDots() {
+  for (let i=0;i<4;i++) document.getElementById(`d${i}`).classList.toggle('filled', i<pinInput.length);
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+
+document.querySelectorAll('.npb[data-n]').forEach(b => b.addEventListener('click', () => {
+  if (pinInput.length < 4) {
+    pinInput += b.dataset.n;
+    updateDots();
+    document.getElementById('pin-err').textContent = '';
+    if (pinInput.length===4) verifyPin();
+  }
+}));
+
+document.getElementById('btn-del').addEventListener('click', () => { pinInput=pinInput.slice(0,-1); updateDots(); });
+document.getElementById('btn-ok').addEventListener('click', () => { if (pinInput.length===4) verifyPin(); });
+
+function verifyPin() {
+  if (pinInput===ADMIN_PIN) { closeModal(); enterAdmin(); }
+  else {
+    document.getElementById('pin-err').textContent = 'Incorrect PIN.';
+    const dots = document.querySelector('.pin-dots');
+    dots.style.animation='shake 0.4s ease';
+    setTimeout(()=>{dots.style.animation='';}, 400);
+    pinInput=''; updateDots();
+  }
+}
+
+function enterAdmin() {
+  document.body.classList.add('admin-mode');
+  hideAll();
+  document.getElementById('state-admin').style.display = 'flex';
+  refreshAdmin();
+}
+
+function exitAdmin() {
+  document.body.classList.remove('admin-mode');
+  hideAll();
+  document.getElementById('state-loading').style.display = 'flex';
+  setTimeout(main, 400);
+}
+
+async function refreshAdmin() {
+  const now = new Date();
+  const hour = now.getHours();
+  const open = hour >= CFG.openHour && hour < CFG.closeHour;
+  document.getElementById('ai-status').textContent = open ? 'Open ✓' : 'Closed';
+  document.getElementById('ai-status').style.color = open ? 'var(--green)' : 'var(--warn)';
+  document.getElementById('ai-time').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  try {
+    const snap = await db.ref('queue').get();
+    const data = snap.val();
+    const day  = todayKey();
+    if (data && data.date===day) {
+      const used = (data.counter||1)-1;
+      const left = Math.max(0, CFG.maxQueue-used);
+      document.getElementById('ai-used').textContent = `${used} / ${CFG.maxQueue}`;
+      document.getElementById('ai-left').textContent = left>0 ? left : 'Full';
+      document.getElementById('admin-big-num').textContent = used;
+    } else {
+      document.getElementById('ai-used').textContent = `0 / ${CFG.maxQueue}`;
+      document.getElementById('ai-left').textContent = CFG.maxQueue;
+      document.getElementById('admin-big-num').textContent = '0';
+    }
+  } catch { document.getElementById('ai-used').textContent = 'Error'; }
+}
+
+document.getElementById('btn-refresh').addEventListener('click', refreshAdmin);
+
+document.getElementById('btn-gen').addEventListener('click', async () => {
+  const dev = 'admin_'+deviceId();
+  const day = todayKey();
+  try {
+    const {assigned, full} = await assignNumber(dev, day, true);
+    if (full) { alert('Queue is full! Reset it first.'); return; }
+    localStorage.setItem(`queue_${day}`, JSON.stringify({number:assigned}));
+    document.body.classList.remove('admin-mode');
+    showSuccess(assigned, true);
+    refreshAdmin();
+  } catch (e) { alert('Error: '+e.message); }
+});
+
+document.getElementById('btn-reset').addEventListener('click', async () => {
+  if (!confirm("Reset today's entire queue? All numbers will be cleared.")) return;
+  try {
+    const day = todayKey();
+    await db.ref('queue').set({date:day, counter:1, devices:{}});
+    localStorage.removeItem(`queue_${day}`);
+    alert('Queue reset!');
+    refreshAdmin();
+  } catch (e) { alert('Error: '+e.message); }
+});
+
+document.getElementById('btn-exit').addEventListener('click', exitAdmin);
+
+window.addEventListener('load', () => setTimeout(main, 600));
 </script>
-
-<!--
-═══════════════════════════════════════════════════════════════
-  FIREBASE REALTIME DATABASE RULES
-  Paste this in: Firebase Console → Realtime Database → Rules
-═══════════════════════════════════════════════════════════════
-
-{
-  "rules": {
-    "queue": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["date"]
-    }
-  }
-}
-
-NOTE: These are basic rules for a controlled QR-only environment.
-If you want stricter rules (recommended for production):
-
-{
-  "rules": {
-    "queue": {
-      ".read": true,
-      ".write": true,
-      "counter": {
-        ".validate": "newData.isNumber() && newData.val() <= 26"
-      },
-      "date": {
-        ".validate": "newData.isString()"
-      },
-      "devices": {
-        "$deviceId": {
-          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 25"
-        }
-      }
-    }
-  }
-}
-
-═══════════════════════════════════════════════════════════════
-  FIREBASE DATABASE STRUCTURE
-  This is what your database will look like after use:
-═══════════════════════════════════════════════════════════════
-
-queue/
-  date: "2024-10-15"          ← today's date (auto resets daily)
-  counter: 8                  ← next number to give (current = counter-1)
-  devices/
-    dev_a1b2c3: 1             ← deviceFingerprint: queueNumber
-    dev_x9y8z7: 2
-    dev_m3n4p5: 3
-    dev_q1r2s3: 4
-    ...
-
-═══════════════════════════════════════════════════════════════
-  VERCEL DEPLOYMENT STEPS
-═══════════════════════════════════════════════════════════════
-
-1. Replace firebaseConfig values with your real Firebase project values
-2. Replace LIBRARY_CONFIG lat/lng with your library's coordinates
-3. Push this single file to a GitHub repo
-4. Go to vercel.com → New Project → Import your repo
-5. No build settings needed — Vercel serves it as static HTML
-6. Deploy → done
-
-To get your library coordinates:
-  → Open Google Maps
-  → Right-click on library building
-  → Click the coordinates shown at top
-  → Copy lat, lng
-
-To get Firebase config:
-  → Firebase Console → Project Settings → Your Apps
-  → Add Web App if none exists
-  → Copy the firebaseConfig object
-
-═══════════════════════════════════════════════════════════════
--->
 </body>
 </html>
