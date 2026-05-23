@@ -534,18 +534,12 @@ async function main() {
   const now = new Date();
   const hour = now.getHours();
 
-  if (hour < LIBRARY_CONFIG.openHour || hour >= LIBRARY_CONFIG.closeHour) {
-    setStep('step-time', '');
-    const opensAt = `${String(LIBRARY_CONFIG.openHour).padStart(2,'0')}:00 AM`;
-    const closesAt = LIBRARY_CONFIG.closeHour <= 12
-      ? `${LIBRARY_CONFIG.closeHour}:00 ${LIBRARY_CONFIG.closeHour < 12 ? 'AM' : 'PM'}`
-      : `${LIBRARY_CONFIG.closeHour - 12}:00 PM`;
-    showError('🕐', 'warn',
-      'Queue is Closed',
-      `Queue is only open between ${opensAt} and ${closesAt}.\n\nCome back during the time window.`
-    );
-    return;
-  }
+  // TESTING MODE — time check disabled
+  // if (hour < LIBRARY_CONFIG.openHour || hour >= LIBRARY_CONFIG.closeHour) {
+  //   setStep('step-time', '');
+  //   showError('🕐', 'warn', 'Queue is Closed', '...');
+  //   return;
+  // }
 
   setStep('step-time', 'done');
 
