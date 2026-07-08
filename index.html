@@ -138,6 +138,15 @@
 
   #clerk-signin { width: 100%; display: flex; justify-content: center; margin-top: 4px; }
 
+  .cl-hidden { display: none !important; }
+  .cl-google-highlight {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+    font-weight: 600 !important;
+  }
+  .cl-google-highlight:hover { background: #a8692f !important; }
+
   /* LOADING */
   #state-loading { display: none; flex-direction: column; align-items: center; gap: 24px; padding: 8px 0; }
 
@@ -837,6 +846,14 @@ async function startApp() {
     window.Clerk.mountSignIn(document.getElementById('clerk-signin'), {
       afterSignInUrl: cleanUrl,
       afterSignUpUrl: cleanUrl,
+      appearance: {
+        elements: {
+          header: 'cl-hidden',
+          socialButtonsBlockButton: 'cl-google-highlight',
+          dividerRow: 'cl-hidden',
+          footer: 'cl-hidden',
+        }
+      }
     });
   }
 
