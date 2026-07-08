@@ -136,16 +136,56 @@
 
   .auth-sub { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-top: -10px; }
 
-  #clerk-signin { width: 100%; display: flex; justify-content: center; margin-top: 4px; }
-
-  .cl-hidden { display: none !important; }
-  .cl-google-highlight {
-    background: var(--accent) !important;
-    color: #fff !important;
-    border-color: var(--accent) !important;
-    font-weight: 600 !important;
+  @media (max-width: 480px) {
+    .card { padding: 28px 22px; }
+    .auth-title { font-size: 19px; }
+    .google-btn { padding: 14px 16px; font-size: 14px; }
   }
-  .cl-google-highlight:hover { background: #a8692f !important; }
+
+  .google-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 15px 20px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border2);
+    background: var(--surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+    margin-top: 4px;
+  }
+  .google-btn:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px rgba(193,123,63,0.15);
+    background: var(--surface2);
+  }
+  .google-btn:active { transform: scale(0.98); }
+  .google-btn svg { flex-shrink: 0; }
+
+  .auth-loading {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .auth-loading.show { display: flex; }
+  .auth-loading .mini-ring {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
 
   /* LOADING */
   #state-loading { display: none; flex-direction: column; align-items: center; gap: 24px; padding: 8px 0; }
@@ -484,7 +524,15 @@
       <div class="auth-badge">🔑</div>
       <div class="auth-title">Sign in to continue</div>
       <div class="auth-sub">We use your Google account so one person can only join the queue once.</div>
-      <div id="clerk-signin"></div>
+      <button class="google-btn" id="google-signin-btn">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l6-6C34.5 5.5 29.6 3.5 24 3.5 12.7 3.5 3.5 12.7 3.5 24S12.7 44.5 24 44.5 44.5 35.3 44.5 24c0-1.2-.1-2.4-.3-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l6-6C34.5 5.5 29.6 3.5 24 3.5c-7.5 0-14 4.2-17.3 10.4z"/>
+          <path fill="#4CAF50" d="M24 44.5c5.5 0 10.4-1.9 14-5l-6.5-5.3c-2 1.4-4.6 2.3-7.5 2.3-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.9 40.2 16.4 44.5 24 44.5z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.6l6.5 5.3C41.5 35.7 44.5 30.3 44.5 24c0-1.2-.1-2.4-.3-3.5z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
     </div>
 
     <!-- LOADING -->
@@ -832,8 +880,6 @@ async function main() {
 async function startApp() {
   await window.Clerk.load();
 
-  const cleanUrl = window.location.origin + window.location.pathname;
-
   if (window.Clerk.user) {
     updateUserPill();
     hideAll();
@@ -843,18 +889,6 @@ async function startApp() {
     updateUserPill();
     hideAll();
     document.getElementById('state-auth').style.display = 'flex';
-    window.Clerk.mountSignIn(document.getElementById('clerk-signin'), {
-      afterSignInUrl: cleanUrl,
-      afterSignUpUrl: cleanUrl,
-      appearance: {
-        elements: {
-          header: 'cl-hidden',
-          socialButtonsBlockButton: 'cl-google-highlight',
-          dividerRow: 'cl-hidden',
-          footer: 'cl-hidden',
-        }
-      }
-    });
   }
 
   window.Clerk.addListener(({ user }) => {
@@ -866,6 +900,24 @@ async function startApp() {
     }
   });
 }
+
+document.getElementById('google-signin-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('google-signin-btn');
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  const cleanUrl = window.location.origin + window.location.pathname;
+  try {
+    await window.Clerk.client.signIn.authenticateWithRedirect({
+      strategy: 'oauth_google',
+      redirectUrl: cleanUrl,
+      redirectUrlComplete: cleanUrl,
+    });
+  } catch (e) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    showError('⚠️','error','Sign In Failed','Could not start Google sign in.\n\n'+e.message);
+  }
+});
 
 document.getElementById('btn-signout').addEventListener('click', async () => {
   const takenToday = localStorage.getItem(`numberTaken_${todayKey()}`) === 'true';
