@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Library Queue</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_aW1wcm92ZWQtYmFybmFjbGUtNjIuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  src="https://improved-barnacle-62.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
 <style>
   :root {
     --bg: #f5f0eb;
@@ -68,72 +75,34 @@
     to   { opacity:1; transform:translateY(0); }
   }
 
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: 28px;
-  }
+  .header { text-align: center; margin-bottom: 28px; }
 
   .header-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-light);
-    border: 1px solid rgba(193,123,63,0.2);
-    border-radius: 40px;
-    padding: 5px 14px;
-    margin-bottom: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); background: var(--accent-light);
+    border: 1px solid rgba(193,123,63,0.2); border-radius: 40px; padding: 5px 14px; margin-bottom: 14px;
   }
 
   .header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 32px;
-    font-weight: 400;
-    color: var(--text);
-    line-height: 1.15;
-    letter-spacing: -0.5px;
+    font-family: 'DM Serif Display', serif; font-size: 32px; font-weight: 400;
+    color: var(--text); line-height: 1.15; letter-spacing: -0.5px; cursor: default;
   }
 
-  .header h1 em {
-    font-style: italic;
-    color: var(--accent);
-  }
+  .header h1 em { font-style: italic; color: var(--accent); }
 
   .admin-pill {
-    display: none;
-    margin-top: 10px;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--admin);
-    background: var(--admin-light);
-    border: 1px solid rgba(91,111,168,0.25);
-    border-radius: 40px;
-    padding: 5px 14px;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
+    display: none; margin-top: 10px; align-items: center; justify-content: center; gap: 6px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--admin); background: var(--admin-light);
+    border: 1px solid rgba(91,111,168,0.25); border-radius: 40px; padding: 5px 14px;
+    width: fit-content; margin-left: auto; margin-right: auto;
   }
   body.admin-mode .admin-pill { display: flex; }
 
-  /* Card */
   .card {
-    background: var(--surface);
-    border-radius: 24px;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    padding: 36px 32px;
-    position: relative;
-    overflow: hidden;
+    background: var(--surface); border-radius: 24px; border: 1px solid var(--border);
+    box-shadow: var(--shadow); padding: 36px 32px; position: relative; overflow: hidden;
     transition: box-shadow 0.4s;
   }
 
@@ -143,75 +112,65 @@
   }
 
   .card-stripe {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: linear-gradient(90deg, var(--accent), #e8a86a, var(--accent));
-    opacity: 0.7;
-    transition: background 0.4s;
+    opacity: 0.7; transition: background 0.4s;
   }
 
   body.admin-mode .card-stripe {
     background: linear-gradient(90deg, var(--admin), #8fa0d4, var(--admin));
   }
 
-  /* LOADING */
-  #state-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-    padding: 8px 0;
+  /* AUTH GATE */
+  #state-auth {
+    display: none; flex-direction: column; align-items: center; gap: 20px;
+    padding: 8px 0 4px; text-align: center;
   }
 
+  .auth-badge {
+    width: 56px; height: 56px; border-radius: 16px; background: var(--accent-light);
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
+  }
+
+  .auth-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; color: var(--text); }
+
+  .auth-sub { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-top: -10px; }
+
+  #clerk-signin { width: 100%; display: flex; justify-content: center; margin-top: 4px; }
+
+  /* LOADING */
+  #state-loading { display: none; flex-direction: column; align-items: center; gap: 24px; padding: 8px 0; }
+
   .loader-ring {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 2px solid var(--border); border-top-color: var(--accent);
     animation: spin 1s linear infinite;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .loading-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    text-align: center;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted);
+    letter-spacing: 1px; text-align: center;
   }
 
-  .steps {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .steps { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 
   .step {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text-muted);
-    transition: color 0.3s;
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+    color: var(--text-muted); transition: color 0.3s;
   }
 
   .step.active { color: var(--accent); font-weight: 500; }
   .step.done   { color: var(--text-mid); }
 
   .step-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--border2);
-    flex-shrink: 0;
-    transition: background 0.3s, box-shadow 0.3s;
+    width: 7px; height: 7px; border-radius: 50%; background: var(--border2);
+    flex-shrink: 0; transition: background 0.3s, box-shadow 0.3s;
   }
 
   .step.active .step-dot {
-    background: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+    background: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
     animation: dotPulse 1.2s ease-in-out infinite;
   }
 
@@ -224,76 +183,45 @@
 
   /* ERROR */
   #state-error {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    text-align: center;
-    padding: 8px 0;
+    display: none; flex-direction: column; align-items: center; gap: 16px;
+    text-align: center; padding: 8px 0;
   }
 
   .err-badge {
-    width: 56px; height: 56px;
-    border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
+    width: 56px; height: 56px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
   }
 
   .err-badge.type-error { background: var(--red-light); }
   .err-badge.type-warn  { background: var(--warn-light); }
   .err-badge.type-info  { background: var(--accent-light); }
 
-  .err-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1.3;
-  }
+  .err-title { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; line-height: 1.3; }
 
   .err-title.type-error { color: var(--red); }
   .err-title.type-warn  { color: var(--warn); }
   .err-title.type-info  { color: var(--accent); }
 
   .err-body {
-    font-size: 13px;
-    color: var(--text-mid);
-    line-height: 1.8;
-    white-space: pre-line;
-    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--text-mid); line-height: 1.8;
+    white-space: pre-line; font-family: 'DM Sans', sans-serif;
   }
 
   /* SUCCESS */
-  #state-success {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
+  #state-success { display: none; flex-direction: column; align-items: center; text-align: center; }
 
   .success-eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    transition: color 0.4s;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 20px; transition: color 0.4s;
   }
 
-  .num-wrap {
-    position: relative;
-    margin-bottom: 32px;
-  }
+  .num-wrap { position: relative; margin-bottom: 32px; }
 
   .num-halo {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    width: 160px; height: 160px;
-    border-radius: 50%;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 160px; height: 160px; border-radius: 50%;
     background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-    animation: halo 3s ease-in-out infinite;
-    transition: background 0.4s;
+    animation: halo 3s ease-in-out infinite; transition: background 0.4s;
   }
 
   body.admin-mode .num-halo {
@@ -306,17 +234,12 @@
   }
 
   .num-val {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(80px, 26vw, 140px);
-    color: var(--accent);
-    line-height: 1;
-    position: relative;
-    z-index: 1;
-    animation: numPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
-    transition: color 0.4s;
+    font-family: 'DM Serif Display', serif; font-size: clamp(80px, 26vw, 140px);
+    color: var(--accent); line-height: 1; position: relative; z-index: 1;
+    animation: numPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both; transition: color 0.4s;
   }
 
-  body.admin-mode .num-val { color: var(--admin); }
+  .num-val.admin-num { color: var(--admin); }
 
   @keyframes numPop {
     from { opacity:0; transform:scale(0.4) rotate(-4deg); }
@@ -324,140 +247,73 @@
   }
 
   .info-list {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 20px;
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; margin-bottom: 20px;
   }
 
   .info-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 13px 18px;
-    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 18px; border-bottom: 1px solid var(--border);
   }
 
   .info-item:last-child { border-bottom: none; }
 
   .info-k {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 400;
-    display: flex;
-    align-items: center;
-    gap: 7px;
+    font-size: 12px; color: var(--text-muted); font-weight: 400;
+    display: flex; align-items: center; gap: 7px;
   }
 
-  .info-v {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text);
-  }
+  .info-v { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
 
   .hint-box {
-    width: 100%;
-    background: var(--accent-light);
-    border: 1px solid rgba(193,123,63,0.2);
-    border-radius: 14px;
-    padding: 14px 18px;
-    font-size: 13px;
-    color: var(--accent);
-    line-height: 1.6;
-    text-align: center;
-    transition: background 0.4s, border-color 0.4s, color 0.4s;
+    width: 100%; background: var(--accent-light); border: 1px solid rgba(193,123,63,0.2);
+    border-radius: 14px; padding: 14px 18px; font-size: 13px; color: var(--accent);
+    line-height: 1.6; text-align: center; transition: background 0.4s, border-color 0.4s, color 0.4s;
   }
 
   body.admin-mode .hint-box {
-    background: var(--admin-light);
-    border-color: rgba(91,111,168,0.2);
-    color: var(--admin);
+    background: var(--admin-light); border-color: rgba(91,111,168,0.2); color: var(--admin);
+  }
+
+  .signout-link {
+    margin-top: 18px; font-size: 12px; color: var(--text-muted);
+    text-decoration: underline; cursor: pointer; background: none; border: none;
+    font-family: 'DM Sans', sans-serif;
   }
 
   /* ADMIN PANEL */
-  #state-admin {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-    text-align: center;
-  }
+  #state-admin { display: none; flex-direction: column; align-items: center; gap: 0; text-align: center; }
 
   .admin-eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--admin);
-    margin-bottom: 20px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--admin); margin-bottom: 20px;
   }
 
   .admin-count {
-    font-family: 'DM Serif Display', serif;
-    font-size: clamp(64px, 22vw, 110px);
-    color: var(--admin);
-    line-height: 1;
-    margin-bottom: 6px;
+    font-family: 'DM Serif Display', serif; font-size: clamp(64px, 22vw, 110px);
+    color: var(--admin); line-height: 1; margin-bottom: 6px;
     animation: numPop 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
   }
 
   .admin-count-label {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-bottom: 24px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 1px;
+    font-size: 12px; color: var(--text-muted); margin-bottom: 24px;
+    font-family: 'DM Mono', monospace; letter-spacing: 1px;
   }
 
-  .admin-stat-grid {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
+  .admin-stat-grid { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 
-  .stat-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 14px;
-    text-align: left;
-  }
+  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; text-align: left; }
 
-  .stat-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 
-  .stat-val {
-    font-family: 'DM Mono', monospace;
-    font-size: 15px;
-    color: var(--text);
-    font-weight: 500;
-  }
+  .stat-val { font-family: 'DM Mono', monospace; font-size: 15px; color: var(--text); font-weight: 500; }
 
-  .admin-btns {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .admin-btns { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 
   .abtn {
-    width: 100%;
-    padding: 14px;
-    border-radius: 14px;
-    border: none;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    transition: transform 0.15s, opacity 0.2s;
-    letter-spacing: 0.1px;
+    width: 100%; padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    transition: transform 0.15s, opacity 0.2s; letter-spacing: 0.1px;
   }
 
   .abtn:active { transform: scale(0.97); }
@@ -468,100 +324,43 @@
 
   /* ADMIN MODAL */
   #admin-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(245,240,235,0.75);
-    backdrop-filter: blur(12px);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
+    display: none; position: fixed; inset: 0; background: rgba(245,240,235,0.75);
+    backdrop-filter: blur(12px); z-index: 200; align-items: center; justify-content: center; padding: 24px;
   }
 
   #admin-modal.open { display: flex; }
 
   .modal-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    box-shadow: var(--shadow-lg);
-    padding: 32px 28px 28px;
-    width: 100%;
-    max-width: 340px;
-    position: relative;
-    animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1) both;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+    box-shadow: var(--shadow-lg); padding: 32px 28px 28px; width: 100%; max-width: 340px;
+    position: relative; animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1) both;
   }
 
   .modal-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    width: 30px; height: 30px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text-muted);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted);
+    font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: border-color 0.2s;
   }
 
   .modal-close:hover { border-color: var(--border2); color: var(--text); }
 
-  .modal-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 4px;
-    color: var(--text);
-  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 24px; text-align: center; margin-bottom: 4px; color: var(--text); }
 
-  .modal-sub {
-    font-size: 13px;
-    color: var(--text-muted);
-    text-align: center;
-    margin-bottom: 28px;
-  }
+  .modal-sub { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
 
-  .pin-dots {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin-bottom: 28px;
-  }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 28px; }
 
-  .pdot {
-    width: 13px; height: 13px;
-    border-radius: 50%;
-    border: 1.5px solid var(--border2);
-    background: transparent;
-    transition: all 0.2s;
-  }
+  .pdot { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--border2); background: transparent; transition: all 0.2s; }
 
-  .pdot.filled {
-    background: var(--admin);
-    border-color: var(--admin);
-    box-shadow: 0 0 0 3px rgba(91,111,168,0.15);
-  }
+  .pdot.filled { background: var(--admin); border-color: var(--admin); box-shadow: 0 0 0 3px rgba(91,111,168,0.15); }
 
-  .numpad {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
   .npb {
-    padding: 15px 0;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    font-family: 'DM Mono', monospace;
-    font-size: 18px;
-    color: var(--text);
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-    user-select: none;
+    padding: 15px 0; border-radius: 14px; border: 1px solid var(--border); background: var(--surface2);
+    font-family: 'DM Mono', monospace; font-size: 18px; color: var(--text); cursor: pointer;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s; user-select: none;
   }
 
   .npb:hover { background: var(--bg); }
@@ -570,41 +369,17 @@
   .npb.del { font-size: 16px; color: var(--text-muted); }
 
   .npb.ok {
-    background: var(--admin);
-    color: #fff;
-    border-color: var(--admin);
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
+    background: var(--admin); color: #fff; border-color: var(--admin);
+    font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 600;
   }
 
   .npb.ok:hover { background: #4a5e97; }
 
-  .pin-err {
-    margin-top: 14px;
-    font-size: 12px;
-    color: var(--red);
-    text-align: center;
-    min-height: 16px;
-  }
+  .pin-err { margin-top: 14px; font-size: 12px; color: var(--red); text-align: center; min-height: 16px; }
 
-  /* Divider */
-  .divider {
-    width: 100%;
-    height: 1px;
-    background: var(--border);
-    margin: 20px 0;
-  }
-
-  /* Footer */
   .footer {
-    text-align: center;
-    margin-top: 20px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
-    opacity: 0.6;
+    text-align: center; margin-top: 20px; font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--text-muted); letter-spacing: 1px; opacity: 0.6;
   }
 
   @keyframes shake {
@@ -614,9 +389,76 @@
     60%{transform:translateX(-5px)}
     80%{transform:translateX(5px)}
   }
+
+  /* USER PILL */
+  .user-pill {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 6px 14px 6px 6px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-mid);
+    box-shadow: var(--shadow);
+    z-index: 50;
+    max-width: calc(100vw - 32px);
+  }
+
+  .user-pill.show { display: flex; }
+
+  .user-pill-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .user-pill-email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+  }
+
+  .user-pill-logout {
+    background: none;
+    border: none;
+    color: var(--red);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .user-pill-logout:hover:not(:disabled) { background: var(--red-light); }
+  .user-pill-logout:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  @media (max-width: 480px) {
+    .user-pill {
+      position: static;
+      margin: 0 auto 16px;
+      width: fit-content;
+    }
+  }
 </style>
 </head>
 <body>
+
+<div class="user-pill" id="user-pill">
+  <div class="user-pill-avatar" id="user-pill-avatar">?</div>
+  <span class="user-pill-email" id="user-pill-email">—</span>
+  <button class="user-pill-logout" id="user-pill-logout">Sign out</button>
+</div>
 
 <div class="container">
   <div class="header">
@@ -628,6 +470,14 @@
   <div class="card">
     <div class="card-stripe"></div>
 
+    <!-- AUTH GATE -->
+    <div id="state-auth">
+      <div class="auth-badge">🔑</div>
+      <div class="auth-title">Sign in to continue</div>
+      <div class="auth-sub">We use your Google account so one person can only join the queue once.</div>
+      <div id="clerk-signin"></div>
+    </div>
+
     <!-- LOADING -->
     <div id="state-loading">
       <div class="loader-ring"></div>
@@ -635,7 +485,7 @@
       <div class="steps">
         <div class="step" id="step-time"><div class="step-dot"></div> Checking time window</div>
         <div class="step" id="step-location"><div class="step-dot"></div> Verifying your location</div>
-        <div class="step" id="step-device"><div class="step-dot"></div> Checking device</div>
+        <div class="step" id="step-device"><div class="step-dot"></div> Checking your account</div>
         <div class="step" id="step-queue"><div class="step-dot"></div> Getting your number</div>
       </div>
     </div>
@@ -655,6 +505,10 @@
         <div class="num-val" id="queue-number">—</div>
       </div>
       <div class="info-list">
+        <div class="info-item">
+          <span class="info-k">👤 Signed in as</span>
+          <span class="info-v" id="info-user">—</span>
+        </div>
         <div class="info-item">
           <span class="info-k">📅 Date</span>
           <span class="info-v" id="info-date">—</span>
@@ -677,6 +531,7 @@
         </div>
       </div>
       <div class="hint-box" id="hint-box">📸 Screenshot this — show at library entry</div>
+      <button class="signout-link" id="btn-signout">Sign out</button>
     </div>
 
     <!-- ADMIN PANEL -->
@@ -711,7 +566,7 @@
     </div>
   </div>
 
-  <div class="footer">QR Queue · v1.1</div>
+  <div class="footer">QR Queue · v1.3</div>
 </div>
 
 <!-- Admin Modal -->
@@ -776,7 +631,7 @@ let pinInput = '';
 let tapCount = 0, tapTimer = null;
 
 function hideAll() {
-  ['state-loading','state-error','state-success','state-admin']
+  ['state-auth','state-loading','state-error','state-success','state-admin']
     .forEach(id => document.getElementById(id).style.display = 'none');
 }
 
@@ -794,7 +649,14 @@ function showSuccess(num, adminOverride = false) {
   hideAll();
   document.getElementById('state-success').style.display = 'flex';
   document.getElementById('queue-number').textContent = num;
+  document.getElementById('queue-number').classList.toggle('admin-num', adminOverride);
   document.getElementById('admin-row').style.display = adminOverride ? 'flex' : 'none';
+
+  const u = window.Clerk?.user;
+  document.getElementById('info-user').textContent = u
+    ? (u.primaryEmailAddress?.emailAddress || u.fullName || 'Signed in')
+    : '—';
+
   const now = new Date();
   document.getElementById('info-date').textContent = now.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   document.getElementById('info-time').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -815,18 +677,30 @@ function setStep(id, state) { document.getElementById(id).className = `step ${st
 function setMsg(m)           { document.getElementById('loading-msg').textContent = m; }
 function delay(ms)           { return new Promise(r => setTimeout(r, ms)); }
 
-function deviceId() {
-  let uid = localStorage.getItem('device_uid');
-  if (!uid) {
-    const raw = [screen.width,screen.height,screen.colorDepth,navigator.hardwareConcurrency||0,
-      navigator.maxTouchPoints||0,Intl.DateTimeFormat().resolvedOptions().timeZone,
-      navigator.language,new Date().getTimezoneOffset()].join('|');
-    let h = 0;
-    for (let i=0;i<raw.length;i++){h=((h<<5)-h)+raw.charCodeAt(i);h|=0;}
-    uid = 'dev_'+Math.abs(h).toString(36)+'_'+Math.random().toString(36).slice(2,8);
-    localStorage.setItem('device_uid', uid);
-  }
-  return uid;
+// Unique identity now comes from the logged-in Google account (via Clerk),
+// not from the device/browser — this closes the "two phones" loophole.
+function getUserId() {
+  return window.Clerk?.user?.id || null;
+}
+
+function markNumberTaken() {
+  localStorage.setItem(`numberTaken_${todayKey()}`, 'true');
+}
+
+function updateUserPill() {
+  const u = window.Clerk?.user;
+  const pill = document.getElementById('user-pill');
+  if (!u) { pill.classList.remove('show'); return; }
+
+  const email = u.primaryEmailAddress?.emailAddress || 'Unknown';
+  document.getElementById('user-pill-email').textContent = email;
+  document.getElementById('user-pill-avatar').textContent = email[0].toUpperCase();
+  pill.classList.add('show');
+
+  const takenToday = localStorage.getItem(`numberTaken_${todayKey()}`) === 'true';
+  const logoutBtn = document.getElementById('user-pill-logout');
+  logoutBtn.disabled = takenToday;
+  logoutBtn.title = takenToday ? "You've already used your number today — sign out disabled" : '';
 }
 
 function todayKey() {
@@ -840,19 +714,19 @@ function distMeters(a,b,c,d) {
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-async function assignNumber(devId, day, forceNew=false) {
+async function assignNumber(userId, day, forceNew=false) {
   const ref = db.ref('queue');
   let assigned = null, full = false;
   await ref.transaction(cur => {
-    if (!cur || cur.date !== day) return {date:day, counter:2, devices:{[devId]:1}};
-    if (!forceNew && cur.devices?.[devId]) { assigned = cur.devices[devId]; return cur; }
+    if (!cur || cur.date !== day) return {date:day, counter:2, devices:{[userId]:1}};
+    if (!forceNew && cur.devices?.[userId]) { assigned = cur.devices[userId]; return cur; }
     if (cur.counter > CFG.maxQueue) { full = true; return; }
     const nxt = (cur.counter||1)+1;
-    return {...cur, counter:nxt, devices:{...(cur.devices||{}), [devId]:nxt-1}};
+    return {...cur, counter:nxt, devices:{...(cur.devices||{}), [userId]:nxt-1}};
   }, (err, committed, snap) => {
     if (err) throw err;
     if (!committed) { full = true; return; }
-    if (assigned === null) assigned = snap.val().devices[devId];
+    if (assigned === null) assigned = snap.val().devices[userId];
   });
   return {assigned, full};
 }
@@ -903,18 +777,26 @@ async function main() {
   setStep('step-location','done');
 
   setStep('step-device','active');
-  setMsg('Checking device…');
+  setMsg('Checking your account…');
   await delay(300);
 
-  const dev = deviceId();
+  const uid = getUserId();
+  if (!uid) {
+    setStep('step-device','');
+    showError('🔑','error','Not Signed In','Please sign in with Google and try again.');
+    return;
+  }
+
   const day = todayKey();
-  const lsKey = `queue_${day}`;
+  const lsKey = `queue_${day}_${uid}`;
   const cached = localStorage.getItem(lsKey);
   if (cached) {
     const {number} = JSON.parse(cached);
     setStep('step-device','done');
     setStep('step-queue','done');
+    markNumberTaken();
     showSuccess(number);
+    updateUserPill();
     document.getElementById('success-eyebrow').textContent = 'Already registered';
     document.getElementById('success-eyebrow').style.color = 'var(--warn)';
     return;
@@ -925,17 +807,64 @@ async function main() {
   setMsg('Getting your number…');
 
   try {
-    const {assigned, full} = await assignNumber(dev, day);
+    const {assigned, full} = await assignNumber(uid, day);
     if (full) { showError('🈵','warn','Queue Full',`All ${CFG.maxQueue} spots are taken.\n\nCome earlier tomorrow.`); return; }
     setStep('step-queue','done');
     localStorage.setItem(lsKey, JSON.stringify({number:assigned}));
+    markNumberTaken();
     showSuccess(assigned);
+    updateUserPill();
   } catch (e) {
     showError('⚙️','error','System Error','Could not connect.\n\nTell the librarian.\n\n'+e.message);
   }
 }
 
-// Admin: tap title 5×
+// ── Clerk auth bootstrapping ──
+async function startApp() {
+  await window.Clerk.load();
+
+  const cleanUrl = window.location.origin + window.location.pathname;
+
+  if (window.Clerk.user) {
+    updateUserPill();
+    hideAll();
+    document.getElementById('state-loading').style.display = 'flex';
+    setTimeout(main, 400);
+  } else {
+    updateUserPill();
+    hideAll();
+    document.getElementById('state-auth').style.display = 'flex';
+    window.Clerk.mountSignIn(document.getElementById('clerk-signin'), {
+      afterSignInUrl: cleanUrl,
+      afterSignUpUrl: cleanUrl,
+    });
+  }
+
+  window.Clerk.addListener(({ user }) => {
+    updateUserPill();
+    if (user && document.getElementById('state-auth').style.display === 'flex') {
+      hideAll();
+      document.getElementById('state-loading').style.display = 'flex';
+      setTimeout(main, 400);
+    }
+  });
+}
+
+document.getElementById('btn-signout').addEventListener('click', async () => {
+  const takenToday = localStorage.getItem(`numberTaken_${todayKey()}`) === 'true';
+  if (takenToday) return;
+  await window.Clerk.signOut();
+  location.reload();
+});
+
+document.getElementById('user-pill-logout').addEventListener('click', async () => {
+  const takenToday = localStorage.getItem(`numberTaken_${todayKey()}`) === 'true';
+  if (takenToday) return;
+  await window.Clerk.signOut();
+  location.reload();
+});
+
+// ── Admin: tap title 5× to open PIN modal ──
 document.getElementById('header-title').addEventListener('click', () => {
   tapCount++;
   clearTimeout(tapTimer);
@@ -1020,12 +949,11 @@ async function refreshAdmin() {
 document.getElementById('btn-refresh').addEventListener('click', refreshAdmin);
 
 document.getElementById('btn-gen').addEventListener('click', async () => {
-  const dev = 'admin_'+deviceId();
+  const uid = 'admin_' + (getUserId() || 'unknown');
   const day = todayKey();
   try {
-    const {assigned, full} = await assignNumber(dev, day, true);
+    const {assigned, full} = await assignNumber(uid, day, true);
     if (full) { alert('Queue is full! Reset it first.'); return; }
-    localStorage.setItem(`queue_${day}`, JSON.stringify({number:assigned}));
     document.body.classList.remove('admin-mode');
     showSuccess(assigned, true);
     refreshAdmin();
@@ -1037,7 +965,6 @@ document.getElementById('btn-reset').addEventListener('click', async () => {
   try {
     const day = todayKey();
     await db.ref('queue').set({date:day, counter:1, devices:{}});
-    localStorage.removeItem(`queue_${day}`);
     alert('Queue reset!');
     refreshAdmin();
   } catch (e) { alert('Error: '+e.message); }
@@ -1045,7 +972,7 @@ document.getElementById('btn-reset').addEventListener('click', async () => {
 
 document.getElementById('btn-exit').addEventListener('click', exitAdmin);
 
-window.addEventListener('load', () => setTimeout(main, 600));
+window.addEventListener('load', () => setTimeout(startApp, 200));
 </script>
 </body>
 </html>
