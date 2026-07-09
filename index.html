@@ -548,7 +548,7 @@
 
     <!-- SUCCESS -->
     <div id="state-success">
-      <img id="success-selfie" src="" alt="" style="display:none; width:88px; height:88px; border-radius:50%; object-fit:cover; border:3px solid var(--accent-light); margin-bottom:14px;" />
+      <img id="success-selfie" src="" alt="" style="display:none; width:100%; max-width:220px; aspect-ratio:1/1; border-radius:16px; object-fit:cover; border:2px solid var(--border); margin-bottom:16px; box-shadow: var(--shadow);" />
       <div class="success-eyebrow" id="success-eyebrow">Your Queue Number</div>
       <div class="num-wrap">
         <div class="num-halo"></div>
@@ -668,7 +668,7 @@ const CFG = {
   radius: 200,
   name: "Central Library",
   openHour: 8,
-  closeHour: 12,
+  closeHour: 11,
   maxQueue: 25,
 };
 
@@ -791,7 +791,7 @@ async function assignNumber(userId, day, selfie, forceNew=false) {
 
 // Opens the camera, lets the student capture a selfie, returns a small compressed
 // data URL. Cropped to a square + heavily compressed to keep Firebase storage low —
-// each stored image stays roughly 10-20KB, and yesterday's data is fully overwritten
+// each stored image stays roughly 25-35KB, and yesterday's data is fully overwritten
 // automatically the moment the first person checks in on a new day (see assignNumber
 // above: `cur.date !== day` resets the whole node) — so nothing accumulates over time.
 function captureSelfie() {
@@ -809,13 +809,13 @@ function captureSelfie() {
     video.srcObject = stream;
     document.getElementById('capture-btn').onclick = () => {
       const canvas = document.getElementById('selfie-canvas');
-      const size = 200; // small square — keeps each photo ~10-20KB
+      const size = 320; // bigger square — clearer face + background for verification (~25-35KB)
       canvas.width = size; canvas.height = size;
       const ctx = canvas.getContext('2d');
       const vw = video.videoWidth, vh = video.videoHeight;
       const s = Math.min(vw, vh);
       ctx.drawImage(video, (vw-s)/2, (vh-s)/2, s, s, 0, 0, size, size);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.45);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
       stream.getTracks().forEach(t => t.stop());
       resolve(dataUrl);
     };
