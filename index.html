@@ -668,7 +668,7 @@ const CFG = {
   radius: 200,
   name: "Central Library",
   openHour: 8,
-  closeHour: 11,
+  closeHour: 12,
   maxQueue: 25,
 };
 
@@ -893,6 +893,28 @@ async function main() {
     return;
   }
   setStep('step-device','done');
+
+  // Naya device / cleared cache / doosra browser ho sakta hai — localStorage khaali hoga,
+  // lekin agar is Google account ko AAJ pehle se hi Firebase mein number mila hua hai,
+  // to seedha wahi purana number+selfie dikha do, dobara camera na kholo.
+  setMsg('Checking for existing registration…');
+  try {
+    const existingSnap = await db.ref('queue').get();
+    const existingData = existingSnap.val();
+    if (existingData && existingData.date === day && existingData.devices?.[uid]) {
+      const entry = existingData.devices[uid];
+      setStep('step-queue','done');
+      localStorage.setItem(lsKey, JSON.stringify({number: entry.number, selfie: entry.selfie}));
+      markNumberTaken();
+      showSuccess(entry.number, false, entry.selfie);
+      updateUserPill();
+      document.getElementById('success-eyebrow').textContent = 'Already registered';
+      document.getElementById('success-eyebrow').style.color = 'var(--warn)';
+      return;
+    }
+  } catch (e) {
+    // agar ye check hi fail ho jaaye, normal flow continue karo (selfie leke naya try karega)
+  }
 
   let selfie;
   try {
