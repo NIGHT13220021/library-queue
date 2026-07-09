@@ -137,12 +137,6 @@
 
   .auth-sub { font-size: 13px; color: var(--text-mid); line-height: 1.6; margin-top: -10px; }
 
-  @media (max-width: 480px) {
-    .card { padding: 28px 22px; }
-    .auth-title { font-size: 19px; }
-    .google-btn { padding: 14px 16px; font-size: 14px; }
-  }
-
   .google-btn {
     width: 100%;
     display: flex;
@@ -169,23 +163,10 @@
   .google-btn:active { transform: scale(0.98); }
   .google-btn svg { flex-shrink: 0; }
 
-  .auth-loading {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 4px;
-  }
-  .auth-loading.show { display: flex; }
-  .auth-loading .mini-ring {
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite;
+  @media (max-width: 480px) {
+    .card { padding: 28px 22px; }
+    .auth-title { font-size: 19px; }
+    .google-btn { padding: 14px 16px; font-size: 14px; }
   }
 
   /* LOADING */
@@ -549,6 +530,15 @@
       </div>
     </div>
 
+    <!-- SELFIE CAPTURE -->
+    <div id="state-selfie" style="display:none; flex-direction:column; align-items:center; gap:16px; text-align:center;">
+      <div class="auth-title">Take a quick photo</div>
+      <div class="auth-sub">Required so staff can verify it's really you at entry.</div>
+      <video id="camera-preview" autoplay playsinline muted style="width:100%; max-width:260px; border-radius:16px; background:#000; transform:scaleX(-1);"></video>
+      <button class="google-btn" id="capture-btn">📸 Capture Photo</button>
+      <canvas id="selfie-canvas" style="display:none;"></canvas>
+    </div>
+
     <!-- ERROR -->
     <div id="state-error">
       <div class="err-badge" id="err-icon">⚠️</div>
@@ -558,6 +548,7 @@
 
     <!-- SUCCESS -->
     <div id="state-success">
+      <img id="success-selfie" src="" alt="" style="display:none; width:88px; height:88px; border-radius:50%; object-fit:cover; border:3px solid var(--accent-light); margin-bottom:14px;" />
       <div class="success-eyebrow" id="success-eyebrow">Your Queue Number</div>
       <div class="num-wrap">
         <div class="num-halo"></div>
@@ -676,8 +667,8 @@ const CFG = {
   lng: 76.76735895194516,
   radius: 200,
   name: "Central Library",
-  openHour: 4,
-  closeHour: 8,
+  openHour: 8,
+  closeHour: 11,
   maxQueue: 25,
 };
 
@@ -690,7 +681,7 @@ let pinInput = '';
 let tapCount = 0, tapTimer = null;
 
 function hideAll() {
-  ['state-auth','state-loading','state-error','state-success','state-admin']
+  ['state-auth','state-loading','state-error','state-success','state-admin','state-selfie']
     .forEach(id => document.getElementById(id).style.display = 'none');
 }
 
@@ -704,12 +695,20 @@ function showError(icon, type, title, body) {
   document.getElementById('err-body').textContent = body;
 }
 
-function showSuccess(num, adminOverride = false) {
+function showSuccess(num, adminOverride = false, selfie = null) {
   hideAll();
   document.getElementById('state-success').style.display = 'flex';
   document.getElementById('queue-number').textContent = num;
   document.getElementById('queue-number').classList.toggle('admin-num', adminOverride);
   document.getElementById('admin-row').style.display = adminOverride ? 'flex' : 'none';
+
+  const selfieImg = document.getElementById('success-selfie');
+  if (selfie) {
+    selfieImg.src = selfie;
+    selfieImg.style.display = 'block';
+  } else {
+    selfieImg.style.display = 'none';
+  }
 
   const u = window.Clerk?.user;
   document.getElementById('info-user').textContent = u
@@ -773,21 +772,54 @@ function distMeters(a,b,c,d) {
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-async function assignNumber(userId, day, forceNew=false) {
+async function assignNumber(userId, day, selfie, forceNew=false) {
   const ref = db.ref('queue');
   let assigned = null, full = false;
   await ref.transaction(cur => {
-    if (!cur || cur.date !== day) return {date:day, counter:2, devices:{[userId]:1}};
-    if (!forceNew && cur.devices?.[userId]) { assigned = cur.devices[userId]; return cur; }
+    if (!cur || cur.date !== day) return {date:day, counter:2, devices:{[userId]:{number:1, selfie, time:Date.now()}}};
+    if (!forceNew && cur.devices?.[userId]) { assigned = cur.devices[userId].number; return cur; }
     if (cur.counter > CFG.maxQueue) { full = true; return; }
     const nxt = (cur.counter||1)+1;
-    return {...cur, counter:nxt, devices:{...(cur.devices||{}), [userId]:nxt-1}};
+    return {...cur, counter:nxt, devices:{...(cur.devices||{}), [userId]:{number:nxt-1, selfie, time:Date.now()}}};
   }, (err, committed, snap) => {
     if (err) throw err;
     if (!committed) { full = true; return; }
-    if (assigned === null) assigned = snap.val().devices[userId];
+    if (assigned === null) assigned = snap.val().devices[userId].number;
   });
   return {assigned, full};
+}
+
+// Opens the camera, lets the student capture a selfie, returns a small compressed
+// data URL. Cropped to a square + heavily compressed to keep Firebase storage low —
+// each stored image stays roughly 10-20KB, and yesterday's data is fully overwritten
+// automatically the moment the first person checks in on a new day (see assignNumber
+// above: `cur.date !== day` resets the whole node) — so nothing accumulates over time.
+function captureSelfie() {
+  return new Promise(async (resolve, reject) => {
+    hideAll();
+    document.getElementById('state-selfie').style.display = 'flex';
+    const video = document.getElementById('camera-preview');
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    } catch (e) {
+      reject(e);
+      return;
+    }
+    video.srcObject = stream;
+    document.getElementById('capture-btn').onclick = () => {
+      const canvas = document.getElementById('selfie-canvas');
+      const size = 200; // small square — keeps each photo ~10-20KB
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const s = Math.min(vw, vh);
+      ctx.drawImage(video, (vw-s)/2, (vh-s)/2, s, s, 0, 0, size, size);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.45);
+      stream.getTracks().forEach(t => t.stop());
+      resolve(dataUrl);
+    };
+  });
 }
 
 async function main() {
@@ -850,11 +882,11 @@ async function main() {
   const lsKey = `queue_${day}_${uid}`;
   const cached = localStorage.getItem(lsKey);
   if (cached) {
-    const {number} = JSON.parse(cached);
+    const {number, selfie} = JSON.parse(cached);
     setStep('step-device','done');
     setStep('step-queue','done');
     markNumberTaken();
-    showSuccess(number);
+    showSuccess(number, false, selfie);
     updateUserPill();
     document.getElementById('success-eyebrow').textContent = 'Already registered';
     document.getElementById('success-eyebrow').style.color = 'var(--warn)';
@@ -862,16 +894,27 @@ async function main() {
   }
   setStep('step-device','done');
 
+  let selfie;
+  try {
+    setMsg('Opening camera…');
+    selfie = await captureSelfie();
+  } catch (e) {
+    showError('📷','error','Camera Required','We need camera access to verify your identity at entry.\n\nPlease allow camera permission and refresh.');
+    return;
+  }
+
+  hideAll();
+  document.getElementById('state-loading').style.display = 'flex';
   setStep('step-queue','active');
   setMsg('Getting your number…');
 
   try {
-    const {assigned, full} = await assignNumber(uid, day);
+    const {assigned, full} = await assignNumber(uid, day, selfie);
     if (full) { showError('🈵','warn','Queue Full',`All ${CFG.maxQueue} spots are taken.\n\nCome earlier tomorrow.`); return; }
     setStep('step-queue','done');
-    localStorage.setItem(lsKey, JSON.stringify({number:assigned}));
+    localStorage.setItem(lsKey, JSON.stringify({number:assigned, selfie}));
     markNumberTaken();
-    showSuccess(assigned);
+    showSuccess(assigned, false, selfie);
     updateUserPill();
   } catch (e) {
     showError('⚙️','error','System Error','Could not connect.\n\nTell the librarian.\n\n'+e.message);
@@ -1023,7 +1066,7 @@ document.getElementById('btn-gen').addEventListener('click', async () => {
   const uid = 'admin_' + (getUserId() || 'unknown');
   const day = todayKey();
   try {
-    const {assigned, full} = await assignNumber(uid, day, true);
+    const {assigned, full} = await assignNumber(uid, day, null, true);
     if (full) { alert('Queue is full! Reset it first.'); return; }
     document.body.classList.remove('admin-mode');
     showSuccess(assigned, true);
