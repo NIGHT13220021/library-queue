@@ -670,6 +670,7 @@ const CFG = {
   openHour: 8,
   closeHour: 12,
   maxQueue: 25,
+  floorKey: "3F-9x7Lq2Rt",   // secret — only the printed QR on the 3rd floor should contain this
 };
 
 const ADMIN_PIN = '1322';
@@ -823,6 +824,18 @@ function captureSelfie() {
 }
 
 async function main() {
+  // Must have scanned the QR physically placed on the 3rd floor — GPS alone
+  // can't tell floors apart (ground floor is inside the same radius), so this
+  // secret key (only present in that specific QR's URL) is what actually proves it.
+  const params = new URLSearchParams(window.location.search);
+  const providedKey = params.get('fk');
+  if (providedKey !== CFG.floorKey) {
+    showError('🏢','error','Wrong Location',
+      `You must scan the QR code posted on the 3rd floor to get a number.\n\nThis link is not valid — please scan the physical QR code at the entrance.`
+    );
+    return;
+  }
+
   setStep('step-time','active');
   setMsg('Checking time window…');
   await delay(400);
